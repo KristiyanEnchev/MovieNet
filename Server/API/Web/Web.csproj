@@ -8,7 +8,6 @@
 
 	<ItemGroup>
 		<Folder Include="Controllers\" />
-		<Folder Include="Extensions\Middleware\" />
 		<Folder Include="Services\" />
 	</ItemGroup>
 
@@ -26,6 +25,10 @@
 		<PackageReference Include="Serilog.Sinks.Async" Version="1.5.0" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="5.0.1" />
 		<PackageReference Include="Serilog.Formatting.Compact" Version="2.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Shared\Shared\Shared.csproj" />
 	</ItemGroup>
 
 </Project>
