@@ -2,6 +2,7 @@
 {
     using System;
     using System.Net;
+    using System.Linq;
     using System.Threading.Tasks;
     using System.Collections.Generic;
 
@@ -43,6 +44,11 @@
 
             switch (exception)
             {
+                case FluentValidation.ValidationException validationException:
+                    statusCode = HttpStatusCode.BadRequest;
+                    messages.AddRange(validationException.Errors.Select(e => e.ErrorMessage));
+                    break;
+
                 case CustomException customException:
                     statusCode = customException.StatusCode;
                     messages.AddRange(customException.ErrorMessages ?? new List<string> { customException.Message });
