@@ -1,6 +1,7 @@
 ﻿namespace Web
 {
     using System.Reflection;
+
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
