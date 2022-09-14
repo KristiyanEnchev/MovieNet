@@ -1,6 +1,5 @@
 ﻿namespace Web.Extensions.Healtchecks
 {
-    using Application.Interfaces.Services;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Diagnostics.HealthChecks;
     using Microsoft.AspNetCore.Routing;
@@ -25,7 +24,7 @@
 
             if (databaseHealthChecks != null && (bool)databaseHealthChecks)
             {
-                healthChecks.AddMongoDb(configuration.GetConnectionString("DefaultConnection")!);
+                //healthChecks.AddNgl(configuration.GetConnectionString("DefaultConnection")!);
             }
 
             healthChecks.AddCheck<ControllerHealthCheck>("controller_health_check");

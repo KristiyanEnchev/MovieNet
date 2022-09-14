@@ -1,13 +1,10 @@
-﻿using Domain.Entities;
-using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Domain
+﻿namespace Domain
 {
+    using MediatR;
+
+    using Domain.Entities;
+    using Domain.Interfaces;
+
     public class DomainEventDispatcher : IDomainEventDispatcher
     {
         private readonly IMediator _mediator;

@@ -6,12 +6,15 @@
 
     using Domain.Interfaces;
 
-    public class User : IdentityUser, IAuditableEntity
+    public class UserRole : IdentityRole, IAuditableEntity
     {
-        public string? FirstName { get; set; }
-        public string? LastName { get; set; }
-        public bool IsActive { get; set; }
-        public DateTime RefreshTokenExpiryTime { get; set; }
+        public string? Description { get; set; }
+        public UserRole(string name, string? description = null)
+            : base(name)
+        {
+            Description = description;
+            NormalizedName = name.ToUpperInvariant();
+        }
 
         public string? CreatedBy { get; set; }
         public DateTimeOffset? CreatedDate { get; set; }
