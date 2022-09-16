@@ -1,12 +1,10 @@
 ﻿namespace Persistence
 {
-    using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
     using Domain;
-    using Domain.Entities;
     using Domain.Interfaces;
 
     using Persistence.Context;
@@ -15,18 +13,28 @@
     {
         public static IServiceCollection AddPersistence(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseNpgsql(configuration.GetConnectionString("DefaultConnection")));
-
-            services.AddScoped<ApplicationDbInitializer>();
-
-            services.AddIdentity<User, UserRole>()
-                .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
-
-            services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+            services.AddDbContext(configuration);
+            services.AddRepositories();
 
             return services;
+        }
+
+        public static void AddDbContext(this IServiceCollection services, IConfiguration configuration)
+        {
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+            services.AddDbContext<ApplicationDbContext>(options =>
+               options.UseNpgsql(connectionString,
+                   builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+
+            services.AddScoped<ApplicationDbContextInitialiser>();
+
+            services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
+        }
+
+        private static void AddRepositories(this IServiceCollection services)
+        {
+
         }
     }
 }
