@@ -1,17 +1,26 @@
 ﻿namespace Web
 {
     using System.Reflection;
+    using System.Security.Authentication;
 
     using Microsoft.AspNetCore.Builder;
+    using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.AspNetCore.Server.Kestrel.Https;
 
     using Application;
+    using Application.Interfaces;
 
+    using Web.Services;
     using Web.Extensions.Swagger;
     using Web.Extensions.Middleware;
     using Web.Extensions.Healtchecks;
+
+    using Infrastructure;
+
+    using Persistence;
 
     public static class Startup
     {
@@ -24,12 +33,48 @@
             });
 
             services.AddApplication();
+            services.AddInfrastructure(config);
+            services.AddPersistence(config);
 
             services.AddSwaggerDocumentation();
+            services.AddRouting(options => options.LowercaseUrls = true);
+
+            services.AddCors();
+
+            services.AddHealth(config);
+            services.AddScoped<IUser, CurrentUser>();
+
+            return services;
+        }
+        public static IServiceCollection AddConfigurations(this IServiceCollection services, IWebHostBuilder hostBulder, IWebHostEnvironment env)
+        {
+            hostBulder.ConfigureAppConfiguration(config =>
+            {
+                config.SetBasePath(Directory.GetCurrentDirectory());
+                config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+                config.AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true);
+                config.AddEnvironmentVariables();
+                config.Build();
+            });
+
+            AddKestrelConfig(hostBulder);
 
             return services;
         }
 
+        private static IWebHostBuilder AddKestrelConfig(IWebHostBuilder builder)
+        {
+            builder.ConfigureKestrel((context, serverOptions) =>
+            {
+                serverOptions.ConfigureHttpsDefaults(options =>
+                {
+                    options.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
+                    options.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
+                });
+            });
+
+            return builder;
+        }
 
         public static IApplicationBuilder UseWeb(this IApplicationBuilder builder)
         {
