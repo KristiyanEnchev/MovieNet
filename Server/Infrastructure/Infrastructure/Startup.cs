@@ -3,6 +3,8 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
+    using MediatR;
+
     using Persistence.Context;
 
     public static class Startup
@@ -20,6 +22,9 @@
 
         private static IServiceCollection AddServices(this IServiceCollection services)
         {
+            services
+                .AddTransient<IMediator, Mediator>();
+
             return services;
         }
 
