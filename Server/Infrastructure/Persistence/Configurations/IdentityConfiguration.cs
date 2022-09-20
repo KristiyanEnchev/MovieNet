@@ -1,32 +1,13 @@
 ﻿namespace Persistence.Configurations
 {
-    using Domain.Entities;
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
+    using Domain.Entities;
+
     public class IdentityConfiguration
     {
-        public class ApplicationUserConfig : IEntityTypeConfiguration<User>
-        {
-            public void Configure(EntityTypeBuilder<User> builder)
-            {
-                builder
-                    .ToTable("Users", "Identity");
-
-                builder
-                    .Property(u => u.Id)
-                        .HasMaxLength(256);
-            }
-        }
-
-        public class ApplicationRoleConfig : IEntityTypeConfiguration<UserRole>
-        {
-            public void Configure(EntityTypeBuilder<UserRole> builder) =>
-                builder
-                    .ToTable("Roles", "Identity");
-        }
-
         public class ApplicationRoleClaimConfig : IEntityTypeConfiguration<IdentityRoleClaim<string>>
         {
             public void Configure(EntityTypeBuilder<IdentityRoleClaim<string>> builder) =>

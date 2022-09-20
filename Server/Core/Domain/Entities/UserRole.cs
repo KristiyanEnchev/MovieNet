@@ -1,8 +1,10 @@
 ﻿namespace Domain.Entities
 {
     using System.ComponentModel.DataAnnotations.Schema;
-    using Domain.Interfaces;
+
     using Microsoft.AspNetCore.Identity;
+
+    using Domain.Interfaces;
 
     public class UserRole : IdentityRole, IAuditableEntity
     {

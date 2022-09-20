@@ -24,9 +24,6 @@
             _user = user;
         }
 
-        public DbSet<User> Users { get; set; }
-        public DbSet<UserRole> Roles { get; set; }
-
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -70,7 +67,10 @@
                 .Where(e => e.DomainEvents.Any())
                 .ToArray();
 
-            await _dispatcher.DispatchAndClearEvents(entitiesWithEvents);
+            if (_dispatcher != null && entitiesWithEvents.Any())
+            {
+                await _dispatcher.DispatchAndClearEvents(entitiesWithEvents);
+            }
         }
 
         public static void DisableCascadeDelete(ModelBuilder builder)

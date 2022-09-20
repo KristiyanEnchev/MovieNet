@@ -13,7 +13,7 @@
         {
             _ = builder.Host.UseSerilog((_, sp, serilogConfig) =>
             {
-                string appName = "Authentication.Api";
+                string appName = "BookClub";
 
                 ConfigureEnrichers(serilogConfig, appName);
                 ConfigureConsoleLogging(serilogConfig, false);
