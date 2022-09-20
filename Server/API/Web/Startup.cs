@@ -21,6 +21,7 @@
     using Infrastructure;
 
     using Persistence;
+    using Persistence.Context;
 
     public static class Startup
     {
@@ -46,6 +47,18 @@
 
             return services;
         }
+
+        public static async Task InitializeDatabase(this IServiceProvider services)
+        {
+            using var scope = services.CreateScope();
+
+            var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
+
+            await initialiser.InitialiseAsync();
+
+            await initialiser.SeedAsync();
+        }
+
         public static IServiceCollection AddConfigurations(this IServiceCollection services, IWebHostBuilder hostBulder, IWebHostEnvironment env)
         {
             hostBulder.ConfigureAppConfiguration(config =>

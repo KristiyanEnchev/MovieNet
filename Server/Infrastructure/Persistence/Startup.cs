@@ -4,10 +4,9 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
 
+    using Persistence.Context;
     using Domain;
     using Domain.Interfaces;
-
-    using Persistence.Context;
 
     public static class Startup
     {

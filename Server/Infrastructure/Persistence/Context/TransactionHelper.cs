@@ -2,7 +2,7 @@
 {
     using Microsoft.EntityFrameworkCore.Storage;
 
-    using Application.Interfaces;
+    using Shared.Interfaces;
 
     public class TransactionHelper : ITransactionHelper
     {

@@ -1,4 +1,4 @@
-﻿namespace Application.Interfaces
+﻿namespace Shared.Interfaces
 {
     using Microsoft.EntityFrameworkCore.Storage;
 

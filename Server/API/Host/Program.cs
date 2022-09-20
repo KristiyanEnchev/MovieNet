@@ -4,8 +4,6 @@ namespace Host
 
     using Serilog;
 
-    using Infrastructure;
-
     using Web;
     using Web.Extensions.Logging;
 

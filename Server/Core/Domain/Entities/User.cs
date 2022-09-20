@@ -1,10 +1,8 @@
 ﻿namespace Domain.Entities
 {
     using System.ComponentModel.DataAnnotations.Schema;
-
-    using Microsoft.AspNetCore.Identity;
-
     using Domain.Interfaces;
+    using Microsoft.AspNetCore.Identity;
 
     public class User : IdentityUser, IAuditableEntity
     {

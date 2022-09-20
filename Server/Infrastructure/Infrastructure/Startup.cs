@@ -28,17 +28,6 @@
             return services;
         }
 
-        public static async Task InitializeDatabase(this IServiceProvider services)
-        {
-            using var scope = services.CreateScope();
-
-            var initialiser = scope.ServiceProvider.GetRequiredService<ApplicationDbContextInitialiser>();
-
-            await initialiser.InitialiseAsync();
-
-            await initialiser.SeedAsync();
-        }
-
         public static IServiceCollection AddIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             return services;

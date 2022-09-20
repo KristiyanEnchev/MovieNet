@@ -2,9 +2,7 @@
 {
     using Microsoft.AspNetCore.Identity;
     using Microsoft.EntityFrameworkCore;
-    using Microsoft.AspNetCore.Builder;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.DependencyInjection;
 
     using Domain.Entities;
 
