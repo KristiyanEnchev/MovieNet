@@ -83,5 +83,33 @@
 
             return Result<string>.SuccessResult("Succesfull Registration !");
         }
+
+        public async Task<Result<UserResponseModel>> Login(UserRequestModel userRequest)
+        {
+            var email = userRequest.Email.Trim().Normalize();
+            var user = await userManager.FindByEmailAsync(email);
+            if (user == null || !user.IsActive)
+            {
+                return Result<UserResponseModel>.Failure(new List<string> { InvalidErrorMessage });
+            }
+
+            if (!user.EmailConfirmed || await userManager.IsLockedOutAsync(user))
+            {
+                return Result<UserResponseModel>.Failure(new List<string> { "Account is not accessible at the moment." });
+            }
+
+            SignInResult signInResult = await signInManager.PasswordSignInAsync(user, userRequest.Password, false, lockoutOnFailure: true);
+
+            if (!signInResult.Succeeded)
+            {
+                return Result<UserResponseModel>.Failure(new List<string> { InvalidErrorMessage });
+            }
+
+            var tokenResult = await GenerateToken(user);
+
+            return Result<UserResponseModel>.SuccessResult(tokenResult);
+        }
+
+        
     }
 }
