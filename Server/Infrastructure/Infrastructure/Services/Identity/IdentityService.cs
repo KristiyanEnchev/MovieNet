@@ -134,6 +134,16 @@
             return Result<UserResponseModel>.SuccessResult(tokenResult);
         }
 
-       
+        public async Task<Result<string>> LogoutAsync(string userEmail)
+        {
+            var user = await userManager.FindByEmailAsync(userEmail);
+            if (user != null)
+            {
+                await userManager.RemoveAuthenticationTokenAsync(user, "TodoSwitch", "RefreshToken");
+            }
+            await signInManager.SignOutAsync();
+
+            return Result<string>.SuccessResult("Succesfull Logout !");
+        }
     }
 }
