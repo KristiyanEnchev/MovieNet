@@ -12,10 +12,11 @@
     using Infrastructure.Services.Helpers;
 
     using Application.Interfaces;
+    using Application.Interfaces.Services;
 
     using Models.User;
 
-    internal class IdentityService
+    internal class IdentityService : IIdentityService
     {
         private const string InvalidErrorMessage = "Invalid credentials.";
 

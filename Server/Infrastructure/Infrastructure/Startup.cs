@@ -16,6 +16,12 @@
 
     using Models;
 
+    using Infrastructure.Services.Identity;
+    using Infrastructure.Services.Token;
+
+    using Application.Interfaces;
+    using Application.Interfaces.Services;
+
     public static class Startup
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
@@ -40,6 +46,8 @@
         private static IServiceCollection AddIdentity(this IServiceCollection services, IConfiguration configuration)
         {
             services
+                .AddTransient<IIdentityService, IdentityService>()
+                .AddTransient<IJwtService, JwtService>()
                 .AddIdentity<User, UserRole>(options =>
                 {
                     options.Password.RequiredLength = 6;
