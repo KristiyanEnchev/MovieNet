@@ -110,6 +110,30 @@
             return Result<UserResponseModel>.SuccessResult(tokenResult);
         }
 
-        
+        public async Task<Result<UserResponseModel>> RefreshTokenAsync(UserRefreshModel request)
+        {
+            var user = await userManager.FindByEmailAsync(request.Email);
+
+            if (user == null)
+            {
+                return Result<UserResponseModel>.Failure(new List<string> { InvalidErrorMessage });
+            }
+
+            string oldRefreshToken = await userManager.GetAuthenticationTokenAsync(user, "TodoSwitch", "RefreshToken");
+            bool isValid = await userManager.VerifyUserTokenAsync(user, "TodoSwitch", "RefreshToken", request.RefreshToken);
+
+            if (oldRefreshToken == null || !oldRefreshToken.Equals(request.RefreshToken) || !isValid)
+            {
+                return Result<UserResponseModel>.Failure(new List<string> { $"Your token is not valid." });
+            }
+
+            var tokenResult = await GenerateToken(user);
+
+            await signInManager.SignInAsync(user, false);
+
+            return Result<UserResponseModel>.SuccessResult(tokenResult);
+        }
+
+       
     }
 }
