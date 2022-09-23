@@ -2,7 +2,7 @@
 {
     public class UserRegisterRequestModel : UserRequestModel
     {
-        internal UserRegisterRequestModel(string firstName, string lastName, string email, string password)
+        public UserRegisterRequestModel(string firstName, string lastName, string email, string password)
             : base(email, password)
         {
             FirstName = firstName;
