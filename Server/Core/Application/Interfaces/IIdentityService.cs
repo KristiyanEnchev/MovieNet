@@ -1,4 +1,4 @@
-﻿namespace Application.Interfaces.Services
+﻿namespace Application.Interfaces
 {
     using System.Threading.Tasks;
 

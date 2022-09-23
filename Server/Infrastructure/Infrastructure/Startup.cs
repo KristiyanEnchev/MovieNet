@@ -20,7 +20,6 @@
     using Infrastructure.Services.Token;
 
     using Application.Interfaces;
-    using Application.Interfaces.Services;
 
     public static class Startup
     {

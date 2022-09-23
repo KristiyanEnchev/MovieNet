@@ -12,7 +12,6 @@
     using Infrastructure.Services.Helpers;
 
     using Application.Interfaces;
-    using Application.Interfaces.Services;
 
     using Models.User;
 

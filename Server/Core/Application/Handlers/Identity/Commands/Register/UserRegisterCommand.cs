@@ -9,7 +9,7 @@
 
     using Models.User;
 
-    using Application.Interfaces.Services;
+    using Application.Interfaces;
 
     public class UserRegisterCommand : UserRegisterRequestModel, IRequest<Result<string>>
     {
