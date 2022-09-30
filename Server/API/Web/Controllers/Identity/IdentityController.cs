@@ -7,6 +7,7 @@
 
     using Shared;
 
+    using Application.Handlers.Identity.Commands.Refresh;
     using Application.Handlers.Identity.Commands.Login;
     using Application.Handlers.Identity.Commands.Register;
 
@@ -28,6 +29,14 @@
         [HttpPost(nameof(Login))]
         [SwaggerOperation("Request an access token using credentials.", "")]
         public async Task<ActionResult<Result<UserResponseModel>>> Login(UserLoginCommand request)
+        {
+            return await Mediator.Send(request).ToActionResult();
+        }
+        
+        [AllowAnonymous]
+        [HttpPost(nameof(Refresh))]
+        [SwaggerOperation("Request an access token using a refresh token.", "")]
+        public async Task<ActionResult<Result<UserResponseModel>>> Refresh(UserRefreshCommand request)
         {
             return await Mediator.Send(request).ToActionResult();
         }
