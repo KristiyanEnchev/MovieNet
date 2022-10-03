@@ -10,6 +10,7 @@
     using Application.Handlers.Identity.Commands.Refresh;
     using Application.Handlers.Identity.Commands.Login;
     using Application.Handlers.Identity.Commands.Register;
+    using Application.Handlers.Identity.Commands.Logout;
 
     using Web.Extensions;
 
@@ -37,6 +38,13 @@
         [HttpPost(nameof(Refresh))]
         [SwaggerOperation("Request an access token using a refresh token.", "")]
         public async Task<ActionResult<Result<UserResponseModel>>> Refresh(UserRefreshCommand request)
+        {
+            return await Mediator.Send(request).ToActionResult();
+        }
+
+        [HttpPost(nameof(Logout))]
+        [SwaggerOperation("Logs out a user", "")]
+        public async Task<ActionResult<Result<string>>> Logout(UserLogoutCommand request)
         {
             return await Mediator.Send(request).ToActionResult();
         }
