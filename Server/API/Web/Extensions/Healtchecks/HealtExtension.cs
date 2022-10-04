@@ -24,11 +24,11 @@
 
             if (databaseHealthChecks != null && (bool)databaseHealthChecks)
             {
-                //healthChecks.AddNgl(configuration.GetConnectionString("DefaultConnection")!);
+                healthChecks.AddNpgSql(configuration.GetConnectionString("DefaultConnection")!);
             }
 
             healthChecks.AddCheck<ControllerHealthCheck>("controller_health_check");
-            healthChecks.AddCheck<CacheHealthCheck>("cache_health_check");
+            //healthChecks.AddCheck<CacheHealthCheck>("cache_health_check");
             healthChecks.AddCheck("disk_space_health_check",
             new DiskSpaceHealthCheck(minimumFreeDiskSpace: 10L * 1024L * 1024L * 1024L, driveName: "C:\\"));
             healthChecks.AddCheck("memory_health_check",
