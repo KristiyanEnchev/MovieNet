@@ -18,8 +18,8 @@
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
                     Version = "v1",
-                    Title = "BookClub.Api",
-                    Description = "Provide basic API functionality for BookClub.",
+                    Title = "MovieNet.Api",
+                    Description = "Provide basic API functionality for MovieNet.",
                     Contact = new OpenApiContact
                     {
                         Name = "Kris" ?? "",
@@ -62,7 +62,7 @@
             app.UseSwagger();
             app.UseSwaggerUI(x =>
             {
-                x.SwaggerEndpoint("/swagger/v1/swagger.json", "BookClub.Api");
+                x.SwaggerEndpoint("/swagger/v1/swagger.json", "MovieNet.Api");
             });
 
             return app;

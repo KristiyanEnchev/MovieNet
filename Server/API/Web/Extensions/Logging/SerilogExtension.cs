@@ -13,7 +13,7 @@
         {
             _ = builder.Host.UseSerilog((_, sp, serilogConfig) =>
             {
-                string appName = "BookClub";
+                string appName = "MovieNet";
 
                 ConfigureEnrichers(serilogConfig, appName);
                 ConfigureConsoleLogging(serilogConfig, false);

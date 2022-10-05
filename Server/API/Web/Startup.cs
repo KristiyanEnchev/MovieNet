@@ -96,7 +96,7 @@
                     .UseHttpsRedirection()
                     .UseErrorHandler()
                     .UseRouting()
-                    .UseCors("BookClub")
+                    .UseCors("MovieNet")
                     .UseAuthentication()
                     .UseAuthorization();
 
@@ -107,7 +107,7 @@
         {
             services.AddCors(options =>
             {
-                options.AddPolicy("BookClub",
+                options.AddPolicy("MovieNet",
                     builder => builder
                        .AllowAnyHeader()
                        .AllowAnyMethod()

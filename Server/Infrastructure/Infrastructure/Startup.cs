@@ -56,7 +56,7 @@
                     options.Password.RequireUppercase = false;
                 })
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddTokenProvider("BookClub", typeof(DataProtectorTokenProvider<User>));
+                .AddTokenProvider("MovieNet", typeof(DataProtectorTokenProvider<User>));
 
             return services;
         }

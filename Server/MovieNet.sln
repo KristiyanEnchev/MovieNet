@@ -9,23 +9,23 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{75A6B942-1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{A569D2F2-FA15-49D2-916A-4EF4B9281397}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Host", "API\Host\Host.csproj", "{DF756086-25DC-4F81-B858-73F918D3045D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Host", "API\Host\Host.csproj", "{DF756086-25DC-4F81-B858-73F918D3045D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Web", "API\Web\Web.csproj", "{1BF1D8CC-960D-4240-8356-3944ECAFB1E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "API\Web\Web.csproj", "{1BF1D8CC-960D-4240-8356-3944ECAFB1E2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Application", "Core\Application\Application.csproj", "{3D21C1DE-7C7D-4850-A043-C1B05E623BF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Application", "Core\Application\Application.csproj", "{3D21C1DE-7C7D-4850-A043-C1B05E623BF6}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain", "Core\Domain\Domain.csproj", "{FD45FA27-EC4C-4B4C-9840-AD95ED601CA8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Domain", "Core\Domain\Domain.csproj", "{FD45FA27-EC4C-4B4C-9840-AD95ED601CA8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Infrastructure", "Infrastructure", "{424C0B6E-B51D-434E-A046-4EC16DA6B99E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Infrastructure", "Infrastructure\Infrastructure\Infrastructure.csproj", "{03C260C5-1E1B-4200-9B07-1E747352D883}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastructure\Infrastructure\Infrastructure.csproj", "{03C260C5-1E1B-4200-9B07-1E747352D883}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Infrastructure\Models\Models.csproj", "{61183400-0A7B-400E-8684-2E925190B7A9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Infrastructure\Models\Models.csproj", "{61183400-0A7B-400E-8684-2E925190B7A9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared\Shared.csproj", "{AC04B0FF-0882-45D8-999C-715B8BF39B92}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared\Shared.csproj", "{AC04B0FF-0882-45D8-999C-715B8BF39B92}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Persistence", "Infrastructure\Persistence\Persistence.csproj", "{5F7BB023-7D82-41C9-B0DA-D1497E84EB9F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Persistence", "Infrastructure\Persistence\Persistence.csproj", "{5F7BB023-7D82-41C9-B0DA-D1497E84EB9F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -119,8 +119,8 @@
                 return Result<UserResponseModel>.Failure(new List<string> { InvalidErrorMessage });
             }
 
-            string oldRefreshToken = await userManager.GetAuthenticationTokenAsync(user, "BookClub", "RefreshToken");
-            bool isValid = await userManager.VerifyUserTokenAsync(user, "BookClub", "RefreshToken", request.RefreshToken);
+            string oldRefreshToken = await userManager.GetAuthenticationTokenAsync(user, "MovieNet", "RefreshToken");
+            bool isValid = await userManager.VerifyUserTokenAsync(user, "MovieNet", "RefreshToken", request.RefreshToken);
 
             if (oldRefreshToken == null || !oldRefreshToken.Equals(request.RefreshToken) || !isValid)
             {
@@ -139,7 +139,7 @@
             var user = await userManager.FindByEmailAsync(userEmail);
             if (user != null)
             {
-                await userManager.RemoveAuthenticationTokenAsync(user, "BookClub", "RefreshToken");
+                await userManager.RemoveAuthenticationTokenAsync(user, "MovieNet", "RefreshToken");
             }
             await signInManager.SignOutAsync();
 
