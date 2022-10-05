@@ -38,7 +38,7 @@
 
             var newRefreshToken = await jwtGenerator.GenerateRefreshToken(user);
 
-            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
             await userManager.UpdateAsync(user);
 
@@ -119,8 +119,8 @@
                 return Result<UserResponseModel>.Failure(new List<string> { InvalidErrorMessage });
             }
 
-            string oldRefreshToken = await userManager.GetAuthenticationTokenAsync(user, "TodoSwitch", "RefreshToken");
-            bool isValid = await userManager.VerifyUserTokenAsync(user, "TodoSwitch", "RefreshToken", request.RefreshToken);
+            string oldRefreshToken = await userManager.GetAuthenticationTokenAsync(user, "BookClub", "RefreshToken");
+            bool isValid = await userManager.VerifyUserTokenAsync(user, "BookClub", "RefreshToken", request.RefreshToken);
 
             if (oldRefreshToken == null || !oldRefreshToken.Equals(request.RefreshToken) || !isValid)
             {
@@ -139,7 +139,7 @@
             var user = await userManager.FindByEmailAsync(userEmail);
             if (user != null)
             {
-                await userManager.RemoveAuthenticationTokenAsync(user, "TodoSwitch", "RefreshToken");
+                await userManager.RemoveAuthenticationTokenAsync(user, "BookClub", "RefreshToken");
             }
             await signInManager.SignOutAsync();
 

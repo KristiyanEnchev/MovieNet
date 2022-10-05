@@ -37,7 +37,7 @@
                 var userId = _user.Id ?? string.Empty;
                 string? email = _user.Email;
 
-                _logger.LogWarning("Todo Service Long Running Request: {Name} ({ElapsedMilliseconds} milliseconds) {@UserId} {@Email} {@Request}",
+                _logger.LogWarning("BookClub Service Long Running Request: {Name} ({ElapsedMilliseconds} milliseconds) {@UserId} {@Email} {@Request}",
                     requestName, elapsedMilliseconds, userId, email, request);
             }
 
