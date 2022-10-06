@@ -11,7 +11,7 @@
 
         public DomainEventDispatcher(IMediator mediator) => _mediator = mediator;
 
-        public async Task DispatchAndClearEvents(IEnumerable<BaseEntity> entitiesWithEvents)
+        public async Task DispatchAndClearEvents(IEnumerable<BaseAuditableEntity> entitiesWithEvents)
         {
             foreach (var entity in entitiesWithEvents)
             {
