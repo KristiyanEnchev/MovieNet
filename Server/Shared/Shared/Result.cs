@@ -1,14 +1,24 @@
 ﻿namespace Shared
 {
+    using Newtonsoft.Json;
+
     using Shared.Interfaces;
 
     public class Result<T> : IResult<T>
     {
+        [JsonProperty(Order = -1)]
         public bool Success { get; set; }
 
-        public T Data { get; set; }
+        [JsonProperty(Order = 1)]
+        public virtual T Data { get; set; }
 
-        public List<string> Errors { get; set; } = new List<string>();
+        [JsonProperty(Order = 2)]
+        public List<string> Errors { get; set; }
+
+        public Result()
+        {
+            Errors = new List<string>();
+        }
 
         public static Result<T> SuccessResult(T data, string message = "")
         {
