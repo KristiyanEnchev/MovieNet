@@ -1,6 +1,7 @@
 ﻿namespace Infrastructure
 {
     using System.Text;
+    using System.Net.Http.Headers;
 
     using Microsoft.AspNetCore.Identity;
     using Microsoft.IdentityModel.Tokens;
@@ -10,14 +11,22 @@
 
     using MediatR;
 
+    using StackExchange.Redis;
+
+    using Polly;
+    using Polly.Extensions.Http;
+
     using Persistence.Context;
 
     using Domain.Entities;
 
     using Models;
 
-    using Infrastructure.Services.Identity;
+    using Infrastructure.Services.Movie;
     using Infrastructure.Services.Token;
+    using Infrastructure.Services.Cache;
+    using Infrastructure.BackgroundJobs;
+    using Infrastructure.Services.Identity;
 
     using Application.Interfaces;
 
@@ -26,6 +35,9 @@
         public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
             services
+                .AddTmdbService(configuration)
+                .AddCacheService(configuration)
+                .AddBackgroundJobs()
                 .AddServices()
                 .AddConfigurations(configuration)
                 .AddIdentity(configuration)
@@ -37,7 +49,9 @@
         private static IServiceCollection AddServices(this IServiceCollection services)
         {
             services
-                .AddTransient<IMediator, Mediator>();
+                .AddTransient<IMediator, Mediator>()
+                .AddTransient<IMovieService, MovieService>()
+                .AddTransient<IUserInteractionService, UserInteractionService>();
 
             return services;
         }
@@ -96,6 +110,67 @@
         {
             services.Configure<TokenSettings>(configuration.GetSection(nameof(TokenSettings)));
 
+            return services;
+        }
+
+        public static IServiceCollection AddCacheService(this IServiceCollection services, IConfiguration configuration)
+        {
+            services.Configure<CacheOptions>(configuration.GetSection("Cache"));
+
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = configuration.GetConnectionString("Redis");
+                options.InstanceName = configuration.GetSection("Cache:InstanceName").Value ?? "MovieNet_";
+            });
+
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var connectionString = configuration.GetConnectionString("Redis");
+                return ConnectionMultiplexer.Connect(connectionString);
+            });
+
+            services.AddScoped<ICacheService, RedisCacheService>();
+
+            return services;
+        }
+
+        public static IServiceCollection AddTmdbService(
+               this IServiceCollection services,
+               IConfiguration configuration)
+        {
+            services.Configure<TmdbOptions>(
+                configuration.GetSection(TmdbOptions.Section));
+
+            services.AddHttpClient<ITmdbService, TmdbService>(client =>
+            {
+                client.DefaultRequestHeaders.Accept.Clear();
+                client.DefaultRequestHeaders.Accept.Add(
+                    new MediaTypeWithQualityHeaderValue("application/json"));
+            })
+            .AddPolicyHandler(GetRetryPolicy())
+            .AddPolicyHandler(GetCircuitBreakerPolicy());
+
+            return services;
+        }
+
+        private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
+        {
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .WaitAndRetryAsync(3, retryAttempt =>
+                    TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+        }
+
+        private static IAsyncPolicy<HttpResponseMessage> GetCircuitBreakerPolicy()
+        {
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .CircuitBreakerAsync(5, TimeSpan.FromSeconds(30));
+        }
+
+        public static IServiceCollection AddBackgroundJobs(this IServiceCollection services)
+        {
+            services.AddHostedService<MovieSyncBackgroundService>();
             return services;
         }
     }
