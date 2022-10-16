@@ -23,6 +23,11 @@
             {
                 if (result.Errors != null)
                 {
+                    if (result.Errors.Contains("Error toggling watchlist: Not a valid user"))
+                    {
+                        return new UnauthorizedObjectResult("Not a valid user");
+                    }
+
                     return new BadRequestObjectResult(new { Errors = response.errors });
                 }
                 return new BadRequestObjectResult("Unexpected Error occured");
