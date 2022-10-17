@@ -1,0 +1,158 @@
+namespace Infrastructure.Services.Movie
+{
+    using System.Net.Http.Json;
+    using System.Net.Http.Headers;
+
+    using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
+
+    using Newtonsoft.Json.Linq;
+
+    using Application.Interfaces;
+
+    using Domain.Enums;
+
+    using Infrastructure.Services.Helpers;
+
+    using Models;
+    using Models.Tmdb;
+    using Models.Tmdb.Enums;
+
+    using Shared;
+
+    public class TmdbService : ITmdbService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly ILogger<TmdbService> _logger;
+        private readonly string _apiKey;
+        private readonly string _imageBaseUrl;
+        private readonly SemaphoreSlim _rateLimiter;
+
+        public TmdbService(
+            HttpClient httpClient,
+            IOptions<TmdbOptions> options,
+            ILogger<TmdbService> logger)
+        {
+            _httpClient = httpClient;
+            _logger = logger;
+            _apiKey = options.Value.ApiKey;
+            _imageBaseUrl = options.Value.ImageBaseUrl;
+
+            var requestsPerSecond = options.Value.RequestsPerSecondLimit;
+            _rateLimiter = new SemaphoreSlim(requestsPerSecond, requestsPerSecond);
+
+            _httpClient.BaseAddress = new Uri(options.Value.BaseUrl);
+            _httpClient.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+        }
+
+        public async Task<Result<PaginatedResult<TmdbMovieDto>>> FetchTrendingAsync(
+            MediaType mediaType,
+            TimeWindow timeWindow = TimeWindow.day,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await _rateLimiter.WaitAsync(cancellationToken);
+
+                var response = await _httpClient.GetAsync($"/3/trending/{mediaType}/{timeWindow}?api_key={_apiKey}");
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<TmdbPagedResponse<TmdbMovieDto>>(cancellationToken: cancellationToken);
+
+                if (result == null)
+                {
+                    return Result<PaginatedResult<TmdbMovieDto>>.Failure("Failed to deserialize TMDB response");
+                }
+
+                foreach (var item in result.Results)
+                {
+                    EnrichImageUrls(item);
+                }
+
+                return Result<PaginatedResult<TmdbMovieDto>>.SuccessResult(PaginationTransformer.TransformToPaginatedResult(result!));
+            }
+
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting trending {TimeWindow}", timeWindow);
+                return Result<PaginatedResult<TmdbMovieDto>>.Failure($"TMDB API error: {ex.Message}");
+            }
+            finally
+            {
+                await ReleaseRateLimiter();
+            }
+        }
+
+
+
+        private void EnrichImageUrls(TmdbMovieDto movie)
+        {
+            if (!string.IsNullOrEmpty(movie.PosterPath))
+                movie.PosterPath = GetFullImageUrl(movie.PosterPath, "w500");
+
+            if (!string.IsNullOrEmpty(movie.BackdropPath))
+                movie.BackdropPath = GetFullImageUrl(movie.BackdropPath, "original");
+        }
+
+        private string GetFullImageUrl(string path, string size)
+        {
+            if (string.IsNullOrEmpty(path)) return string.Empty;
+            return $"{_imageBaseUrl}{size}{path}";
+        }
+
+        private async Task ReleaseRateLimiter()
+        {
+            await Task.Delay(1000 / _rateLimiter.CurrentCount);
+            _rateLimiter.Release();
+        }
+
+        private string ToSortQuery(SortingOptions sortBy)
+        {
+            var sortString = sortBy.ToString().ToLower();
+            int lastUnderscoreIndex = sortString.LastIndexOf('_');
+
+            if (lastUnderscoreIndex >= 0)
+            {
+                sortString = sortString.Substring(0, lastUnderscoreIndex) + "." + sortString.Substring(lastUnderscoreIndex + 1);
+            }
+
+            return $"sort_by={sortString}";
+        }
+
+        private bool IsValidYear(string year)
+        {
+            if (int.TryParse(year, out var numericYear))
+            {
+                return numericYear >= 1900 && numericYear <= 2100;
+            }
+            return false;
+        }
+
+        private void ProcessDetailsResponse(TmdbMovieDetailsDto movieDetails, JObject jsonObject)
+        {
+            try
+            {
+                if (jsonObject["credits"] != null)
+                {
+                    if (jsonObject["credits"]["cast"] != null)
+                    {
+                        movieDetails.Cast = jsonObject["credits"]["cast"].ToObject<List<TmdbCastDto>>();
+                    }
+                }
+
+                if (jsonObject["videos"] != null)
+                {
+                    movieDetails.Videos = new TmdbVideoResultsDto
+                    {
+                        Results = jsonObject["videos"]["results"]?.ToObject<List<TmdbVideoDto>>() ?? new List<TmdbVideoDto>()
+                    };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error processing details response");
+            }
+        }
+    }
+}
