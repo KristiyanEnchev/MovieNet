@@ -84,7 +84,61 @@ namespace Infrastructure.Services.Movie
             }
         }
 
+        public async Task<Result<TmdbMovieDetailsDto>> GetDetailsAsync(
+           MediaType mediaType,
+           int tmdbId,
+           bool appendToResponse = false,
+           CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await _rateLimiter.WaitAsync(cancellationToken);
 
+                var uri = $"/3/{mediaType}/{tmdbId}?api_key={_apiKey}";
+                if (appendToResponse)
+                {
+                    var appendResponses = new[] { "credits", "images", "videos", "keywords", "external_ids" };
+                    var appendResponse = string.Join(",", appendResponses);
+
+                    uri = $"{uri}&append_to_response={appendResponse}";
+                }
+
+                var response = await _httpClient.GetAsync(uri, cancellationToken);
+
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadAsStringAsync(cancellationToken);
+                var jsonObject = JObject.Parse(result);
+
+                //var movieDetails = JsonConvert.DeserializeObject<TmdbMovieDetailsDto>(result);
+                var movieDetails = await response.Content.ReadFromJsonAsync<TmdbMovieDetailsDto>(cancellationToken: cancellationToken);
+
+                if (movieDetails == null)
+                {
+                    return Result<TmdbMovieDetailsDto>.Failure("Failed to deserialize TMDB response");
+                }
+
+                if (appendToResponse)
+                {
+                    ProcessDetailsResponse(movieDetails, jsonObject);
+                }
+
+                EnrichImageUrls(movieDetails);
+
+                return Result<TmdbMovieDetailsDto>.SuccessResult(movieDetails);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting {MediaType} details. TmdbId: {TmdbId}", mediaType, tmdbId);
+                return Result<TmdbMovieDetailsDto>.Failure($"TMDB API error: {ex.Message}");
+            }
+            finally
+            {
+                await ReleaseRateLimiter();
+            }
+        }
+
+     
 
         private void EnrichImageUrls(TmdbMovieDto movie)
         {
