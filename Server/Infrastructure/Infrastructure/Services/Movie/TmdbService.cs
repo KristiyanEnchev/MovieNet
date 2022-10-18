@@ -138,7 +138,54 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-     
+        public async Task<Result<PaginatedResult<TmdbMovieDto>>> SearchAsync(
+            string query,
+            MediaType mediatype = MediaType.multi,
+            int page = 1,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await _rateLimiter.WaitAsync(cancellationToken);
+
+                var queryParams = new List<string>
+                {
+                    $"api_key={_apiKey}",
+                    $"query={Uri.EscapeDataString(query)}",
+                    $"page={page}"
+                };
+
+                var response = await _httpClient.GetAsync(
+                    $"/3/search/{mediatype}?{string.Join("&", queryParams)}",
+                    cancellationToken);
+
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<TmdbPagedResponse<TmdbMovieDto>>(
+                    cancellationToken: cancellationToken);
+
+                if (result == null)
+                    return Result<PaginatedResult<TmdbMovieDto>>.Failure("Failed to deserialize TMDB response");
+
+                foreach (var item in result.Results)
+                {
+                    EnrichImageUrls(item);
+                }
+
+                return Result<PaginatedResult<TmdbMovieDto>>.SuccessResult(PaginationTransformer.TransformToPaginatedResult(result));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching. Query: {Query}", query);
+                return Result<PaginatedResult<TmdbMovieDto>>.Failure($"TMDB API error: {ex.Message}");
+            }
+            finally
+            {
+                await ReleaseRateLimiter();
+            }
+        }
+
+      
 
         private void EnrichImageUrls(TmdbMovieDto movie)
         {
