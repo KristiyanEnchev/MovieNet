@@ -185,6 +185,67 @@ namespace Infrastructure.Services.Movie
             }
         }
 
+        public async Task<Result<PaginatedResult<TmdbMovieDto>>> DiscoverAsync(
+            MediaType mediaType = MediaType.movie,
+            SortingOptions sortBy = SortingOptions.popularity_desc,
+            int[] withGenres = null,
+            string year = null,
+            int page = 1,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(year) && !IsValidYear(year))
+                {
+                    return Result<PaginatedResult<TmdbMovieDto>>.Failure($"Invalid year: {year}. Year must be a numeric value between 1900 and 2100.");
+                }
+
+                await _rateLimiter.WaitAsync(cancellationToken);
+                var sort = ToSortQuery(sortBy);
+
+                var queryParams = new List<string>
+                {
+                    $"api_key={_apiKey}",
+                    $"page={page}",
+                    $"sort_by={sort}"
+                };
+
+                if (withGenres != null && withGenres.Length > 0)
+                    queryParams.Add($"with_genres={string.Join(",", withGenres)}");
+
+                var response = await _httpClient.GetAsync(
+                    $"/3/discover/{mediaType}?{string.Join("&", queryParams)}",
+                    cancellationToken);
+
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<TmdbPagedResponse<TmdbMovieDto>>(
+                    cancellationToken: cancellationToken);
+
+                if (result == null)
+                {
+                    return Result<PaginatedResult<TmdbMovieDto>>.Failure("Failed to deserialize TMDB response");
+                }
+
+                foreach (var item in result.Results)
+                {
+                    EnrichImageUrls(item);
+                    item.MediaType = mediaType;
+                }
+
+                return Result<PaginatedResult<TmdbMovieDto>>.SuccessResult(PaginationTransformer.TransformToPaginatedResult(result));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error discovering {MediaType}s", mediaType);
+                return Result<PaginatedResult<TmdbMovieDto>>.Failure($"TMDB API error: {ex.Message}");
+            }
+            finally
+            {
+                await ReleaseRateLimiter();
+            }
+        }
+
       
 
         private void EnrichImageUrls(TmdbMovieDto movie)
