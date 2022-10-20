@@ -246,6 +246,39 @@ namespace Infrastructure.Services.Movie
             }
         }
 
+        public async Task<Result<List<TmdbGenreDto>>> GetGenresAsync(
+            MediaType mediaType,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await _rateLimiter.WaitAsync(cancellationToken);
+
+                var response = await _httpClient.GetAsync(
+                    $"/3/genre/{mediaType}/list?api_key={_apiKey}",
+                    cancellationToken);
+
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<GenreResponse>(
+                    cancellationToken: cancellationToken);
+
+                if (result == null)
+                    return Result<List<TmdbGenreDto>>.Failure("Failed to deserialize TMDB response");
+
+                return Result<List<TmdbGenreDto>>.SuccessResult(result.Genres);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error fetching genres for {MediaType}", mediaType);
+                return Result<List<TmdbGenreDto>>.Failure($"TMDB API error: {ex.Message}");
+            }
+            finally
+            {
+                await ReleaseRateLimiter();
+            }
+        }
+
       
 
         private void EnrichImageUrls(TmdbMovieDto movie)
