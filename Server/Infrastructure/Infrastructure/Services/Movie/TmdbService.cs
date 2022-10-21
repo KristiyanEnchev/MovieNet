@@ -279,7 +279,40 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-      
+        public async Task<Result<TmdbCreditsDto>> GetCreditsAsync(
+            MediaType mediaType,
+            int tmdbId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await _rateLimiter.WaitAsync(cancellationToken);
+
+                var uri = $"/3/{mediaType}/{tmdbId}/credits?api_key={_apiKey}";
+                var response = await _httpClient.GetAsync(uri, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<TmdbCreditsDto>(cancellationToken: cancellationToken);
+
+                if (result == null)
+                {
+                    return Result<TmdbCreditsDto>.Failure("Failed to deserialize TMDB response");
+                }
+
+                return Result<TmdbCreditsDto>.SuccessResult(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting credits for {MediaType} with ID {TmdbId}", mediaType, tmdbId);
+                return Result<TmdbCreditsDto>.Failure($"TMDB API error: {ex.Message}");
+            }
+            finally
+            {
+                await ReleaseRateLimiter();
+            }
+        }
+
+       
 
         private void EnrichImageUrls(TmdbMovieDto movie)
         {
