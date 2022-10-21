@@ -24,6 +24,11 @@
             _user = user;
         }
 
+        public DbSet<Movie> Movies { get; set; }
+        public DbSet<Comment> Comments { get; set; }
+        public DbSet<Genre> Genres { get; set; }
+        public DbSet<UserMovieInteraction> UserMovieInteractions { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -51,18 +56,18 @@
             {
                 if (entry.State == EntityState.Added)
                 {
-                    entry.Entity.CreatedDate = DateTimeOffset.UtcNow;
+                    entry.Entity.CreatedDate = DateTime.UtcNow;
                     entry.Entity.CreatedBy = _user.Id;
                 }
 
-                entry.Entity.UpdatedDate = DateTimeOffset.UtcNow;
+                entry.Entity.UpdatedDate = DateTime.UtcNow;
                 entry.Entity.UpdatedBy = _user.Id;
             }
         }
 
         private async Task DispatchDomainEvents()
         {
-            var entitiesWithEvents = ChangeTracker.Entries<BaseEntity>()
+            var entitiesWithEvents = ChangeTracker.Entries<BaseAuditableEntity>()
                 .Select(e => e.Entity)
                 .Where(e => e.DomainEvents.Any())
                 .ToArray();
