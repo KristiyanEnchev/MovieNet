@@ -312,7 +312,49 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-       
+        public async Task<Result<TmdbVideoResultsDto>> GetVideosAsync(
+            MediaType mediaType,
+            int tmdbId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await _rateLimiter.WaitAsync(cancellationToken);
+
+                var uri = $"/3/{mediaType}/{tmdbId}/videos?api_key={_apiKey}";
+                var response = await _httpClient.GetAsync(uri, cancellationToken);
+                response.EnsureSuccessStatusCode();
+
+                var result = await response.Content.ReadFromJsonAsync<TmdbVideoResultsDto>(cancellationToken: cancellationToken);
+
+                if (result == null)
+                {
+                    return Result<TmdbVideoResultsDto>.Failure("Failed to deserialize TMDB response");
+                }
+
+                result.Results = result.Results
+                    .Where(v => v.Site?.ToLower() == TmdbVideoSite.youtube.ToString() && 
+                               v.Type?.ToLower() == TmdbVideoType.trailer.ToString() && 
+                               !string.IsNullOrEmpty(v.Key))
+                    .Select(v => 
+                    {
+                        v.Url = $"https://www.youtube.com/embed/{v.Key}";
+                        return v;
+                    })
+                    .ToList();
+
+                return Result<TmdbVideoResultsDto>.SuccessResult(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting videos for {MediaType} with ID {TmdbId}", mediaType, tmdbId);
+                return Result<TmdbVideoResultsDto>.Failure($"TMDB API error: {ex.Message}");
+            }
+            finally
+            {
+                await ReleaseRateLimiter();
+            }
+        }
 
         private void EnrichImageUrls(TmdbMovieDto movie)
         {
