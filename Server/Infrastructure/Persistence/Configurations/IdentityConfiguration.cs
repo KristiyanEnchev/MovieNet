@@ -4,8 +4,6 @@
     using Microsoft.EntityFrameworkCore;
     using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-    using Domain.Entities;
-
     public class IdentityConfiguration
     {
         public class ApplicationRoleClaimConfig : IEntityTypeConfiguration<IdentityRoleClaim<string>>
