@@ -5,9 +5,13 @@
     using Microsoft.Extensions.DependencyInjection;
 
     using Persistence.Context;
+    using Persistence.Repositories;
+    using Persistence.Repositories.Interfaces;
 
     using Domain;
     using Domain.Interfaces;
+
+    using Shared.Interfaces;
 
     public static class Startup
     {
@@ -24,8 +28,15 @@
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
             services.AddDbContext<ApplicationDbContext>(options =>
-               options.UseNpgsql(connectionString,
-                   builder => builder.MigrationsAssembly(typeof(ApplicationDbContext).Assembly.FullName)));
+            {
+                options.UseNpgsql(connectionString, builder =>
+                {
+                    builder.EnableRetryOnFailure(
+                        maxRetryCount: 3,
+                        maxRetryDelay: TimeSpan.FromSeconds(10),
+                        errorCodesToAdd: null);
+                });
+            });
 
             services.AddScoped<ApplicationDbContextInitialiser>();
 
@@ -34,7 +45,11 @@
 
         private static void AddRepositories(this IServiceCollection services)
         {
-
+            services.AddScoped<ITransactionHelper, TransactionHelper>();
+            services.AddScoped<IGenreRepository, GenreRepository>();
+            services.AddScoped<IMovieRepository, MovieRepository>();
+            services.AddScoped<ICommentRepository, CommentRepository>();
+            services.AddScoped<IUserMovieInteractionRepository, UserMovieInteractionRepository>();
         }
     }
 }
