@@ -87,6 +87,26 @@ namespace Infrastructure.Services.Movie
             await _cache.RemoveByPrefixAsync($"{mediaType}:{movieId}:");
         }
 
-       
+        private async Task EnrichWithUserDataAsync(
+            MovieDto movie,
+            string userId,
+            CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(userId))
+                return;
+
+            var interaction = await _interactionRepository.GetUserInteractionAsync(
+                userId,
+                movie.TmdbId,
+                cancellationToken);
+
+            if (interaction != null)
+            {
+                movie.IsLiked = interaction.IsLiked;
+                movie.IsWatchlisted = interaction.IsWatchlisted;
+            }
+        }
+
+        
     }
 }
