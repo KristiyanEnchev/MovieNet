@@ -107,6 +107,29 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-        
+        public async Task<Result<List<GenreDto>>> GetGenresAsync(
+            MediaType mediaType,
+            bool forceRefresh = false,
+            CancellationToken cancellationToken = default)
+        {
+            var cacheKey = $"genres_{mediaType.ToString().ToLower()}";
+
+            return await _cache.GetOrSetAsync(
+                cacheKey,
+                async () =>
+                {
+                    var tmdbResult = await _tmdbService.GetGenresAsync(mediaType, cancellationToken);
+                    if (!tmdbResult.Success)
+                        return Result<List<GenreDto>>.Failure(tmdbResult.Errors);
+
+                    await SyncGenresAsync(tmdbResult.Data, mediaType, cancellationToken);
+                    var genres = await _genreRepository.GetAllGenresAsync(mediaType, cancellationToken);
+                    return Result<List<GenreDto>>.SuccessResult(_mapper.Map<List<GenreDto>>(genres));
+                },
+                forceRefresh ? TimeSpan.Zero : TimeSpan.FromDays(1),
+                cancellationToken);
+        }
+
+       
     }
 }
