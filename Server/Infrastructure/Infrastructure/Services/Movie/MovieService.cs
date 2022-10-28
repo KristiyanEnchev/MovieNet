@@ -130,6 +130,42 @@ namespace Infrastructure.Services.Movie
                 cancellationToken);
         }
 
-       
+        public async Task<Result<PaginatedResult<MovieDto>>> GetTrendingAsync(
+            MediaType mediaType,
+            TimeWindow timeWindow,
+            bool appendToResponse,
+            string userId = null,
+            CancellationToken cancellationToken = default)
+        {
+            var cacheKey = $"trending_{mediaType}:{timeWindow}";
+
+            var result = await _cache.GetOrSetAsync(
+                cacheKey,
+                async () =>
+                {
+                    var tmdbResult = await _tmdbService.FetchTrendingAsync(mediaType, timeWindow, cancellationToken);
+                    if (!tmdbResult.Success)
+                        return Result<PaginatedResult<MovieDto>>.Failure(tmdbResult.Errors);
+
+                    var movies = _mapper.Map<List<MovieDto>>(tmdbResult.Data.Data);
+                    return Result<PaginatedResult<MovieDto>>.SuccessResult(
+                        PaginatedResult<MovieDto>.Create(
+                            movies,
+                            tmdbResult.Data.TotalCount,
+                            tmdbResult.Data.CurrentPage,
+                            tmdbResult.Data.PageSize));
+                },
+                TimeSpan.FromMinutes(15),
+                cancellationToken);
+
+            if (result.Success && !string.IsNullOrEmpty(userId))
+            {
+                await EnrichWithUserDataAsync(result.Data.Data, userId, cancellationToken);
+            }
+
+            return result;
+        }
+
+        
     }
 }
