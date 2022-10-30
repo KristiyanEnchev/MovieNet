@@ -202,6 +202,37 @@ namespace Infrastructure.Services.Movie
             return result;
         }
 
-        
+        public async Task<Result<MovieDetailsDto>> GetDetailsAsync(
+            MediaType mediaType,
+            int tmdbId,
+            bool appendToResponse,
+            string userId = null,
+            CancellationToken cancellationToken = default)
+        {
+            var cacheKey = $"{mediaType}_details:{tmdbId}";
+
+            var result = await _cache.GetOrSetAsync(cacheKey,
+                async () =>
+                {
+                    var tmdbResult = await _tmdbService.GetDetailsAsync(mediaType, tmdbId, appendToResponse, cancellationToken);
+                    if (!tmdbResult.Success)
+                        return Result<MovieDetailsDto>.Failure(tmdbResult.Errors);
+
+                    await SyncMovieFromTmdbAsync(mediaType, tmdbId, appendToResponse, cancellationToken);
+                    var movieDto = _mapper.Map<MovieDetailsDto>(tmdbResult.Data);
+                    return Result<MovieDetailsDto>.SuccessResult(movieDto);
+                },
+                TimeSpan.FromHours(1),
+                cancellationToken);
+
+            if (result.Success && !string.IsNullOrEmpty(userId))
+            {
+                await EnrichWithUserDataAsync(result.Data, userId, cancellationToken);
+            }
+
+            return result;
+        }
+
+       
     }
 }
