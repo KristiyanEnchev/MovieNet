@@ -274,6 +274,30 @@ namespace Infrastructure.Services.Movie
             return result;
         }
 
+        private async Task EnrichWithUserDataAsync(
+             IEnumerable<MovieDto> movies,
+             string userId,
+             CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrEmpty(userId) || !movies.Any())
+                return;
+
+            var interactions = await _interactionRepository.GetUserInteractionsAsync(
+                userId,
+                movies.Select(m => m.TmdbId).ToList(),
+                cancellationToken);
+
+            foreach (var movie in movies)
+            {
+                var interaction = interactions.FirstOrDefault(i => i.MovieId == movie.TmdbId);
+                if (interaction != null)
+                {
+                    movie.IsLiked = interaction.IsLiked;
+                    movie.IsDisliked = interaction.IsDisliked;
+                    movie.IsWatchlisted = interaction.IsWatchlisted;
+                }
+            }
+        }
        
     }
 }
