@@ -233,6 +233,47 @@ namespace Infrastructure.Services.Movie
             return result;
         }
 
+        public async Task<Result<PaginatedResult<MovieDto>>> GetAllAsync(
+            MediaType mediaType,
+            int page = 1,
+            SortingOptions sortBy = SortingOptions.popularity_desc,
+            int[] withGenres = null,
+            string year = null,
+            string userId = null,
+            CancellationToken cancellationToken = default)
+        {
+            var genresKey = withGenres != null && withGenres.Any()
+                ? string.Join("-", withGenres.OrderBy(g => g))
+                : "none";
+
+            var cacheKey = $"discover_{mediaType}:{page}:{sortBy}:{genresKey}:{year ?? "any"}";
+
+            var result = await _cache.GetOrSetAsync(cacheKey,
+                async () =>
+                {
+                    var tmdbResult = await _tmdbService.DiscoverAsync(mediaType, sortBy, withGenres, year, page, cancellationToken);
+                    if (!tmdbResult.Success)
+                        return Result<PaginatedResult<MovieDto>>.Failure(tmdbResult.Errors);
+
+                    var movies = _mapper.Map<List<MovieDto>>(tmdbResult.Data.Data);
+                    return Result<PaginatedResult<MovieDto>>.SuccessResult(
+                        PaginatedResult<MovieDto>.Create(
+                            movies,
+                            tmdbResult.Data.TotalCount,
+                            tmdbResult.Data.CurrentPage,
+                            tmdbResult.Data.PageSize));
+                },
+                TimeSpan.FromMinutes(15),
+                cancellationToken);
+
+            if (result.Success && !string.IsNullOrEmpty(userId))
+            {
+                await EnrichWithUserDataAsync(result.Data.Data, userId, cancellationToken);
+            }
+
+            return result;
+        }
+
        
     }
 }
