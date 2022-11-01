@@ -107,6 +107,46 @@ namespace Infrastructure.Services.Movie
             return movie;
         }
 
-        
+        public async Task<Result<bool>> ToggleLikeAsync(
+             MediaType mediaType,
+             string userId,
+             int movieId,
+             string title,
+             CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var movie = await EnsureMovieExistsAsync(mediaType, movieId, title, cancellationToken);
+
+                var interaction = await _interactionRepository.GetUserInteractionAsync(userId, movie.TmdbId, cancellationToken)
+                    ?? new UserMovieInteraction(userId, movie.TmdbId, mediaType);
+
+                var wasLiked = interaction.IsLiked;
+                interaction.ToggleLike();
+
+                if (wasLiked)
+                {
+                    movie.RemoveLike();
+                    movie.AddDislike();
+                }
+                else
+                {
+                    movie.AddLike();
+                    movie.RemoveDislike();
+                }
+
+                await _interactionRepository.AddOrUpdateAsync(interaction, cancellationToken);
+                await _movieRepository.UpdateAsync(movie, cancellationToken);
+
+                return Result<bool>.SuccessResult(interaction.IsLiked);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling like. UserId: {UserId}, MovieId: {MovieId}", userId, movieId);
+                return Result<bool>.Failure($"Error toggling like: {ex.Message}");
+            }
+        }
+
+       
     }
 }
