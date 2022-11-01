@@ -298,6 +298,64 @@ namespace Infrastructure.Services.Movie
                 }
             }
         }
-       
+        private async Task SyncGenresAsync(
+            List<TmdbGenreDto> tmdbGenres,
+            MediaType mediaType,
+            CancellationToken cancellationToken)
+        {
+            try
+            {
+                var genreData = tmdbGenres
+                    .Select(g => (g.Id, g.Name, mediaType))
+                    .ToList();
+
+                await _genreRepository.GetOrAddGenresAsync(genreData, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error syncing genres for {MediaType}", mediaType);
+                throw;
+            }
+        }
+
+        private async Task<List<Genre>> EnrichDbGenres(
+          Result<TmdbMovieDetailsDto> tmdbResult,
+          MediaType mediaType,
+          CancellationToken cancellationToken)
+        {
+            if (tmdbResult.Data?.Genres == null || !tmdbResult.Data.Genres.Any())
+                return new List<Genre>();
+
+            try
+            {
+                var genreData = tmdbResult.Data.Genres
+                    .Select(g => (g.Id, g.Name, mediaType))
+                    .ToList();
+
+                return await _genreRepository.GetOrAddGenresAsync(genreData, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error enriching genres for movie. TmdbId: {TmdbId}", tmdbResult.Data?.TmdbId);
+                throw;
+            }
+        }
+
+        private async Task SyncMoviesAsync(List<int> tmdbIds, MediaType mediaType, bool appendToResponse, CancellationToken cancellationToken)
+        {
+            try
+            {
+                foreach (var batch in tmdbIds.Chunk(10))
+                {
+                    var tasks = batch.Select(id => SyncMovieFromTmdbAsync(mediaType, id, appendToResponse, cancellationToken));
+                    await Task.WhenAll(tasks);
+                    await Task.Delay(1000, cancellationToken); // Rate limiting between batches
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error syncing {MediaType}s from TMDB", mediaType);
+            }
+        }
     }
 }
