@@ -179,6 +179,38 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-        
+        public async Task<Result<bool>> ToggleWatchlistAsync(
+             MediaType mediaType,
+             string userId,
+             int movieId,
+             string title,
+             CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var userExists = await ExistsAsync(userId, cancellationToken);
+                if (!userExists)
+                {
+                    throw new UnauthorizedAccessException("Not a valid user");
+                }
+
+                var movie = await EnsureMovieExistsAsync(mediaType, movieId, title, cancellationToken);
+
+                var interaction = await _interactionRepository.GetUserInteractionAsync(userId, movie.TmdbId, cancellationToken)
+                    ?? new UserMovieInteraction(userId, movie.TmdbId, mediaType);
+
+                interaction.ToggleWatchlist();
+                await _interactionRepository.AddOrUpdateAsync(interaction, cancellationToken);
+
+                return Result<bool>.SuccessResult(interaction.IsWatchlisted);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling watchlist. UserId: {UserId}, MovieId: {MovieId}", userId, movieId);
+                return Result<bool>.Failure($"Error toggling watchlist: {ex.Message}");
+            }
+        }
+
+       
     }
 }
