@@ -147,6 +147,38 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-       
+        public async Task<Result<bool>> ToggleDislikeAsync(
+            MediaType mediaType,
+            string userId,
+            int movieId,
+            string title,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var movie = await EnsureMovieExistsAsync(mediaType, movieId, title, cancellationToken);
+
+                var interaction = await _interactionRepository.GetUserInteractionAsync(userId, movie.TmdbId, cancellationToken)
+                    ?? new UserMovieInteraction(userId, movie.TmdbId, mediaType);
+
+                var wasDisliked = interaction.IsDisliked;
+                interaction.ToggleDislike();
+
+                if (wasDisliked) movie.RemoveDislike();
+                else movie.AddDislike();
+
+                await _interactionRepository.AddOrUpdateAsync(interaction, cancellationToken);
+                await _movieRepository.UpdateAsync(movie, cancellationToken);
+
+                return Result<bool>.SuccessResult(interaction.IsDisliked);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling dislike. UserId: {UserId}, MovieId: {MovieId}", userId, movieId);
+                return Result<bool>.Failure($"Error toggling dislike: {ex.Message}");
+            }
+        }
+
+        
     }
 }
