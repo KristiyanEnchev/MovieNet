@@ -211,6 +211,37 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-       
+        public async Task<Result<PaginatedResult<MovieDto>>> GetUserWatchlistAsync(
+            string userId,
+            int page = 1,
+            int pageSize = 20,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var result = await _interactionRepository.GetUserWatchlistAsync(userId, page, pageSize, cancellationToken);
+                var movies = result.Data.Select(i => {
+                    var movieDto = _mapper.Map<MovieDto>(i.Movie);
+                    movieDto.PosterPath = i.Movie.PosterPath;
+                    movieDto.VoteAverage = i.Movie.VoteAverage;
+                    movieDto.ReleaseDate = i.Movie.ReleaseDate;
+                    movieDto.MediaType = i.MediaType;
+                    movieDto.IsLiked = i.IsLiked;
+                    movieDto.IsDisliked = i.IsDisliked;
+                    movieDto.IsWatchlisted = i.IsWatchlisted;
+                    return movieDto;
+                }).ToList();
+
+                return Result<PaginatedResult<MovieDto>>.SuccessResult(
+                    PaginatedResult<MovieDto>.Create(movies, result.TotalCount, page, pageSize));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user watchlist. UserId: {UserId}", userId);
+                return Result<PaginatedResult<MovieDto>>.Failure($"Error getting user watchlist: {ex.Message}");
+            }
+        }
+
+      
     }
 }
