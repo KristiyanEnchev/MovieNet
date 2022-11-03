@@ -242,6 +242,29 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-      
+        public async Task<Result<UserMovieInteractionDto>> GetUserInteractionAsync(
+            MediaType mediaType,
+            string userId,
+            int movieId,
+            string title,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await EnsureMovieExistsAsync(mediaType, movieId, title, cancellationToken);
+
+                var interaction = await _interactionRepository.GetUserInteractionAsync(userId, movieId, cancellationToken);
+                return interaction == null
+                    ? Result<UserMovieInteractionDto>.SuccessResult(new UserMovieInteractionDto { MovieId = movieId, MediaType = mediaType })
+                    : Result<UserMovieInteractionDto>.SuccessResult(_mapper.Map<UserMovieInteractionDto>(interaction));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user interaction. UserId: {UserId}, MovieId: {MovieId}", userId, movieId);
+                return Result<UserMovieInteractionDto>.Failure($"Error getting user interaction: {ex.Message}");
+            }
+        }
+
+       
     }
 }
