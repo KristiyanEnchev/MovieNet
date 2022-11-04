@@ -293,6 +293,41 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-      
+        public async Task<Result<string>> DeleteCommentAsync(
+            string commentId,
+            int movieId,
+            string userId,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var comment = await _commentRepository.GetByIdAsync(commentId, cancellationToken);
+
+                if (comment == null)
+                    return Result<string>.Failure("Comment not found");
+
+                if (comment.UserId != userId)
+                    return Result<string>.Failure("You can only delete your own comments");
+
+                comment.AddDomainEvent(new CommentDeletedEvent
+                {
+                    CommentId = commentId,
+                    MovieId = movieId.ToString(),
+                    UserId = userId
+                });
+
+                await _commentRepository.DeleteCommentAsync(commentId, cancellationToken);
+
+                return Result<string>.SuccessResult("Comment deleted successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting comment. CommentId: {CommentId}, UserId: {UserId}", commentId, userId);
+                return Result<string>.Failure($"Error deleting comment: {ex.Message}");
+            }
+        }
+
+
+       
     }
 }
