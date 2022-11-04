@@ -265,6 +265,34 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-       
+        public async Task<Result<CommentDto>> AddCommentAsync(
+           string userId,
+           int movieId,
+           string content,
+           CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var comment = new Comment(content, userId, movieId);
+                comment.AddDomainEvent(new CommentAddedEvent
+                {
+                    CommentId = comment.Id,
+                    MovieId = movieId.ToString(),
+                    UserId = userId,
+                    Created = DateTime.UtcNow
+                });
+
+                await _commentRepository.AddCommentAsync(comment, cancellationToken);
+
+                return Result<CommentDto>.SuccessResult(_mapper.Map<CommentDto>(comment));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error adding comment. UserId: {UserId}, MovieId: {MovieId}", userId, movieId);
+                return Result<CommentDto>.Failure($"Error adding comment: {ex.Message}");
+            }
+        }
+
+      
     }
 }
