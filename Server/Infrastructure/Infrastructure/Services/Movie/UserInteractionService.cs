@@ -328,6 +328,27 @@ namespace Infrastructure.Services.Movie
         }
 
 
+        public async Task<Result<PaginatedResult<CommentDto>>> GetMovieCommentsAsync(
+            int movieId,
+            int page = 1,
+            int pageSize = 20,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                var result = await _commentRepository.GetMovieCommentsAsync(movieId, page, pageSize, cancellationToken);
+                var comments = result.Data.Select(c => _mapper.Map<CommentDto>(c)).ToList();
+
+                return Result<PaginatedResult<CommentDto>>.SuccessResult(
+                    PaginatedResult<CommentDto>.Create(comments, result.TotalCount, page, pageSize));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting movie comments. MovieId: {MovieId}", movieId);
+                return Result<PaginatedResult<CommentDto>>.Failure($"Error getting movie comments: {ex.Message}");
+            }
+        }
+
        
     }
 }
