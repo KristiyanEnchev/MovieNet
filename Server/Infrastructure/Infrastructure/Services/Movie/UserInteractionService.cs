@@ -349,6 +349,69 @@ namespace Infrastructure.Services.Movie
             }
         }
 
-       
+        public async Task<Result<UserMovieInteractionDto>> GetUserInteractionAsync(
+            MediaType mediaType,
+            string userId,
+            int movieId,
+            string title,
+            bool includeComments = false,
+            CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await EnsureMovieExistsAsync(mediaType, movieId, title, cancellationToken);
+
+                var interaction = await _interactionRepository.GetUserInteractionAsync(userId, movieId, cancellationToken);
+                var dto = interaction == null
+                    ? new UserMovieInteractionDto { MovieId = movieId, MediaType = mediaType }
+                    : _mapper.Map<UserMovieInteractionDto>(interaction);
+
+                if (includeComments)
+                {
+                    var commentsResult = await GetMovieCommentsAsync(movieId, cancellationToken: cancellationToken);
+                    if (commentsResult.Success)
+                    {
+                        dto.Comments = commentsResult.Data.Data;
+                    }
+                }
+
+                return Result<UserMovieInteractionDto>.SuccessResult(dto);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting user interaction. UserId: {UserId}, MovieId: {MovieId}", userId, movieId);
+                return Result<UserMovieInteractionDto>.Failure($"Error getting user interaction: {ex.Message}");
+            }
+        }
+
+        public async Task<bool> ExistsAsync(
+           string userId,
+           CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    _logger.LogWarning("Attempted to check existence of user with null or empty ID");
+                    return false;
+                }
+
+                var exists = await userManager.Users
+                    .AnyAsync(u => u.Id == userId && u.IsActive,
+                        cancellationToken);
+
+                if (!exists)
+                {
+                    _logger.LogInformation("User with ID {UserId} not found or is inactive", userId);
+                }
+
+                return exists;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking existence of user with ID {UserId}", userId);
+                return false;
+            }
+        }
     }
 }
