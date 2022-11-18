@@ -33,7 +33,7 @@
                 options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
             });
 
-            services.AddApplication();
+            services.AddApplication(config);
             services.AddInfrastructure(config);
             services.AddPersistence(config);
 
