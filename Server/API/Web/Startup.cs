@@ -92,6 +92,7 @@
         public static IApplicationBuilder UseWeb(this IApplicationBuilder builder)
         {
             builder.UseSwaggerDocumentation()
+                    .UseMapper()
                     .UseStaticFiles()
                     .UseHttpsRedirection()
                     .UseErrorHandler()
