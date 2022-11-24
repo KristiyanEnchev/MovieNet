@@ -12,6 +12,13 @@ services:
     restart: unless-stopped
     volumes:
       - postgres_data:/var/lib/postgresql/data/
+    networks:
+      - app-network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U admin -d MovieNet']
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   # PG Admin
   pgadmin:
@@ -26,6 +33,83 @@ services:
       - '5050:80'
     volumes:
       - pgadmin_data:/root/.pgadmin
+    networks:
+      - app-network
+
+  redis:
+    image: redis:latest
+    container_name: master
+    command: bash -c "redis-server --appendonly yes --requirepass password"
+    ports:
+      - '6379:6379'
+    volumes:
+      - ./Redis/data:/data
+    networks:
+      - app-network
+
+  redis-slave:
+    image: redis:latest
+    container_name: slave
+    ports:
+      - '6380:6379'
+    command: redis-server /etc/redis.conf --replicaof master 6379
+    depends_on:
+      - redis
+    volumes:
+      - ./Redis/redis.conf:/etc/redis.conf
+    networks:
+      - app-network
+
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=slave
+      - REDIS_HOST=master
+      - REDIS_PASSWORD=password
+      - HTTP_USER=masterauth
+      - HTTP_PASSWORD=password
+    ports:
+      - 8081:8081
+    depends_on:
+      - redis
+    networks:
+      - app-network
+
+  api:
+    build:
+      context: ./Server
+      dockerfile: ./API/Host/Dockerfile
+    container_name: dotnet-api
+    ports:
+      - '5069:80'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DOTNET_ENVIRONMENT=DEV
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=MovieNet;Username=admin;Password=password;Timeout=30
+    networks:
+      - app-network
+
+  client:
+    build:
+      context: ./Client
+      dockerfile: Dockerfile
+      args:
+        - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
+    container_name: react-client
+    ports:
+      - '3000:80'
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=PROD
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    name: app-network
 
 volumes:
   postgres_data:
