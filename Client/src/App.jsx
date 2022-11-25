@@ -1,7 +1,8 @@
 import React from 'react';
+import ErrorBoundary from './components/shared/ErrorBoundary';
 
 function App() {
-  return <></>;
+  return <ErrorBoundary></ErrorBoundary>;
 }
 
 export default App;
