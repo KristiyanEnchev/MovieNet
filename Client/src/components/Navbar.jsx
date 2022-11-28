@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Film, Home, Tv } from 'lucide-react';
+import { ThemeToggle } from './shared/ThemeToggle';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Home' },
@@ -43,6 +44,7 @@ export function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4">
+            <ThemeToggle />
             <Link
               to="/login"
               className="text-muted-foreground hover:text-primary transition-colors"
