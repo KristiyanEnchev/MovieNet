@@ -1,7 +1,10 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Film, Home, Tv } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from '../features/auth/authSlice';
 import { ThemeToggle } from './shared/ThemeToggle';
+import { UserMenu } from './shared/UserMenu';
 
 const navItems = [
   { path: '/', icon: Home, label: 'Home' },
@@ -11,6 +14,7 @@ const navItems = [
 
 export function Navbar() {
   const location = useLocation();
+  const isAuthenticated = useSelector(selectIsAuthenticated);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/20 backdrop-blur-md border-b border-border/40">
@@ -45,12 +49,16 @@ export function Navbar() {
 
           <div className="flex items-center space-x-4">
             <ThemeToggle />
-            <Link
-              to="/login"
-              className="text-muted-foreground hover:text-primary transition-colors"
-            >
-              Login
-            </Link>
+            {isAuthenticated ? (
+              <UserMenu />
+            ) : (
+              <Link
+                to="/login"
+                className="text-muted-foreground hover:text-primary transition-colors"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </div>
       </div>
