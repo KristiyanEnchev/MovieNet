@@ -8,6 +8,7 @@ import ErrorBoundary from './components/shared/ErrorBoundary';
 
 // Pages
 import LoginPage from './pages/auth/LoginPage';
+import SignupPage from './pages/auth/SignupPage';
 
 function App() {
   return (
@@ -24,6 +25,14 @@ function App() {
                 element={
                   <AuthRoute>
                     <LoginPage />
+                  </AuthRoute>
+                }
+              />
+              <Route
+                path="/signup"
+                element={
+                  <AuthRoute>
+                    <SignupPage />
                   </AuthRoute>
                 }
               />
