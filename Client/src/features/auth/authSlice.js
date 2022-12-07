@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { decodeToken } from '../../lib/jwt';
-import { authApi } from './authApi';
+import { decodeToken } from './../../lib/jwt';
+import { setCredentials, clearCredentials, updateToken } from './authActions';
 
 const extractUserFromToken = (token) => {
   if (!token) return null;
@@ -54,57 +54,33 @@ const initialState = loadState() || {
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {
-    setCredentials: (state, { payload }) => {
-      state.token = payload.accessToken;
-      state.refreshToken = payload.refreshToken;
-      state.refreshTokenExpiryTime = payload.refreshTokenExpiryTime;
-      state.isAuthenticated = true;
-      state.user = extractUserFromToken(payload.accessToken);
-      saveState(state);
-    },
-    clearCredentials: (state) => {
-      state.user = null;
-      state.token = null;
-      state.refreshToken = null;
-      state.refreshTokenExpiryTime = null;
-      state.isAuthenticated = false;
-      localStorage.removeItem('auth');
-    },
-    updateToken: (state, { payload }) => {
-      state.token = payload.accessToken;
-      state.refreshToken = payload.refreshToken;
-      state.refreshTokenExpiryTime = payload.refreshTokenExpiryTime;
-      state.user = extractUserFromToken(payload.accessToken);
-      saveState(state);
-    },
-  },
+  reducers: {},
   extraReducers: (builder) => {
     builder
-      .addMatcher(
-        authApi.endpoints.login.matchFulfilled,
-        (state, { payload }) => {
-          state.token = payload.accessToken;
-          state.refreshToken = payload.refreshToken;
-          state.refreshTokenExpiryTime = payload.refreshTokenExpiryTime;
-          state.isAuthenticated = true;
-          state.user = extractUserFromToken(payload.accessToken);
-          saveState(state);
-        }
-      )
-      .addMatcher(authApi.endpoints.logout.matchFulfilled, (state) => {
+      .addCase(setCredentials, (state, { payload }) => {
+        state.token = payload.accessToken;
+        state.refreshToken = payload.refreshToken;
+        state.refreshTokenExpiryTime = payload.refreshTokenExpiryTime;
+        state.user = extractUserFromToken(payload.accessToken);
+        state.isAuthenticated = true;
+        saveState(state);
+      })
+      .addCase(clearCredentials, (state) => {
         state.user = null;
         state.token = null;
         state.refreshToken = null;
         state.refreshTokenExpiryTime = null;
         state.isAuthenticated = false;
         localStorage.removeItem('auth');
+      })
+      .addCase(updateToken, (state, { payload }) => {
+        state.token = payload.accessToken;
+        state.refreshToken = payload.refreshToken;
+        state.refreshTokenExpiryTime = payload.refreshTokenExpiryTime;
+        saveState(state);
       });
   },
 });
-
-export const { setCredentials, clearCredentials, updateToken } =
-  authSlice.actions;
 
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectIsAuthenticated = (state) => state.auth.isAuthenticated;

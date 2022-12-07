@@ -91,21 +91,21 @@ services:
     networks:
       - app-network
 
-  client:
-    build:
-      context: ./Client
-      dockerfile: Dockerfile
-      args:
-        - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
-    container_name: react-client
-    ports:
-      - '3000:80'
-    depends_on:
-      - api
-    environment:
-      - NODE_ENV=PROD
-    networks:
-      - app-network
+  # client:
+  #   build:
+  #     context: ./Client
+  #     dockerfile: Dockerfile
+  #     args:
+  #       - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
+  #   container_name: react-client
+  #   ports:
+  #     - '3000:80'
+  #   depends_on:
+  #     - api
+  #   environment:
+  #     - NODE_ENV=PROD
+  #   networks:
+  #     - app-network
 
 networks:
   app-network:

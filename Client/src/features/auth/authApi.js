@@ -1,51 +1,11 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { setCredentials, clearCredentials, updateToken } from './authSlice';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createBaseQueryWithReauth } from './baseQuery';
+import { setCredentials, clearCredentials, updateToken } from './authActions';
+import { toast } from 'react-hot-toast';
 
 console.log('API Base URL:', process.env.REACT_APP_API_BASE_URL);
 
-const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:5069/api',
-  prepareHeaders: (headers, { getState }) => {
-    const token = getState().auth.token;
-    if (token) {
-      headers.set('authorization', `Bearer ${token}`);
-    }
-    return headers;
-  },
-});
-
-const baseQueryWithReauth = async (args, api, extraOptions) => {
-  let result = await baseQuery(args, api, extraOptions);
-
-  if (result.error && result.error.status === 401) {
-    const refreshToken = api.getState().auth.refreshToken;
-    const user = api.getState().auth.user;
-
-    if (refreshToken && user) {
-      const refreshResult = await baseQuery(
-        {
-          url: '/identity/refresh-token',
-          method: 'POST',
-          body: {
-            email: user.email,
-            refreshToken: refreshToken,
-          },
-        },
-        api,
-        extraOptions
-      );
-
-      if (refreshResult.data) {
-        api.dispatch(updateToken(refreshResult.data));
-        result = await baseQuery(args, api, extraOptions);
-      } else {
-        api.dispatch(clearCredentials());
-      }
-    }
-  }
-
-  return result;
-};
+const baseQueryWithReauth = createBaseQueryWithReauth({ clearCredentials, updateToken });
 
 export const authApi = createApi({
   reducerPath: 'authApi',
@@ -60,14 +20,11 @@ export const authApi = createApi({
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          dispatch(
-            setCredentials({
-              accessToken: data.accessToken,
-              refreshToken: data.refreshToken,
-              refreshTokenExpiryTime: data.refreshTokenExpiryTime,
-            })
-          );
-        } catch (err) {}
+          dispatch(setCredentials(data));
+          toast.success('Successfully logged in!');
+        } catch (err) {
+          toast.error(err?.error?.data?.errors[0] || 'Failed to login');
+        }
       },
     }),
     register: builder.mutation({
@@ -76,6 +33,14 @@ export const authApi = createApi({
         method: 'POST',
         body: userData,
       }),
+      async onQueryStarted(arg, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          toast.success('Registration successful! Please login.');
+        } catch (err) {
+          toast.error(err?.error?.data?.errors[0] || 'Registration failed');
+        }
+      },
     }),
     logout: builder.mutation({
       query: (email) => ({
@@ -87,7 +52,10 @@ export const authApi = createApi({
         try {
           await queryFulfilled;
           dispatch(clearCredentials());
-        } catch (err) {}
+          toast.success('Successfully logged out');
+        } catch (err) {
+          toast.error(err?.error?.data?.errors[0] || 'Failed to logout');
+        }
       },
     }),
     refreshToken: builder.mutation({
@@ -97,9 +65,6 @@ export const authApi = createApi({
         body: { email, refreshToken },
       }),
     }),
-    getMe: builder.query({
-      query: () => '/identity/me',
-    }),
   }),
 });
 
@@ -108,5 +73,4 @@ export const {
   useRegisterMutation,
   useLogoutMutation,
   useRefreshTokenMutation,
-  useGetMeQuery,
 } = authApi;
