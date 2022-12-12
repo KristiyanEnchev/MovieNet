@@ -1,9 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { useLogoutMutation } from '../../features/auth/authApi';
-import { useSelector, useDispatch } from 'react-redux';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import { selectCurrentUser } from '../../features/auth/authSlice';
-import { clearCredentials } from '../../features/auth/authSlice';
+import { clearCredentials } from '../../features/auth/authActions';
+import { useLogoutMutation } from '../../features/auth/authApi';
 
 export function UserMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +11,7 @@ export function UserMenu() {
   const [logout] = useLogoutMutation();
   const user = useSelector(selectCurrentUser);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -28,6 +29,7 @@ export function UserMenu() {
       if (user?.email) {
         await logout(user.email);
         dispatch(clearCredentials());
+        navigate('/login');
       }
     } catch (error) {
       console.error('Logout failed:', error);
