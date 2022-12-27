@@ -77,6 +77,7 @@ const DialogFooter = ({ className, ...props }) => (
 );
 
 const DialogTitle = forwardRef(({ className, ...props }, ref) => (
+  // eslint-disable-next-line jsx-a11y/heading-has-content
   <h2
     ref={ref}
     className={cn(

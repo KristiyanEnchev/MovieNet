@@ -1,8 +1,7 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { toast } from 'react-hot-toast';
 
-const BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
 
 export const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
@@ -17,7 +16,7 @@ export const baseQuery = fetchBaseQuery({
 
 export const createBaseQueryWithReauth = (actions) => {
   const { clearCredentials, updateToken } = actions;
-
+  
   return async (args, api, extraOptions) => {
     let result = await baseQuery(args, api, extraOptions);
 
