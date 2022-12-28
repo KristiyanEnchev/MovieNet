@@ -86,8 +86,10 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      - DOTNET_ENVIRONMENT=DEV
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=MovieNet;Username=admin;Password=password;Timeout=30
+      - DOTNET_ENVIRONMENT=PROD
+      - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
+      - ConnectionStrings__Redis=${REDIS_CONNECTION}
+      - Tmdb__ApiKey=${TMDB_API_KEY}
     networks:
       - app-network
 
