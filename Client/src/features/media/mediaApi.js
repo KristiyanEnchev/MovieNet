@@ -120,6 +120,10 @@ export const mediaApi = createApi({
           genres: item.genres || [],
           status: item.status,
           tagline: item.tagline,
+          budget: item.budget,
+          revenue: item.revenue,
+          originalLanguage: item.originalLanguage,
+          voteCount: item.voteCount,
         };
       },
       providesTags: (result) =>

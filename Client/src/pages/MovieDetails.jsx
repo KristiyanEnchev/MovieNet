@@ -26,7 +26,7 @@ export default function MovieDetails() {
     isLoading: isLoadingMovie,
     isSuccess: isMovieSuccess,
   } = useGetMovieDetailsQuery(queryParams);
-
+  console.log(movie);
   const { data: credits } = useGetMovieCreditsQuery(
     isMovieSuccess ? queryParams : skipToken,
     { skip: !isMovieSuccess }
