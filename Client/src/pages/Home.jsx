@@ -11,19 +11,29 @@ import { TrendingShows } from '../components/home/TrendingShows';
 import { MovieCard } from '../components/movie/MovieCard';
 
 export default function Home() {
+  const [initialLoad, setInitialLoad] = useState(true);
+
   const {
     data: movies = [],
-    isLoading: isLoadingMovies,
     isError: isMoviesError,
     refetch: refetchMovies,
-  } = useGetTrendingMoviesQuery({});
+  } = useGetTrendingMoviesQuery(
+    {},
+    {
+      refetchOnMountOrArgChange: true,
+    }
+  );
 
   const {
     data: shows = [],
-    isLoading: isLoadingShows,
     isError: isShowsError,
     refetch: refetchShows,
-  } = useGetTrendingShowsQuery({});
+  } = useGetTrendingShowsQuery(
+    {},
+    {
+      refetchOnMountOrArgChange: true,
+    }
+  );
 
   const [searchState, setSearchState] = useState({
     results: null,
@@ -31,41 +41,31 @@ export default function Home() {
     searchQuery: '',
   });
 
+  useEffect(() => {
+    if (
+      movies.length > 0 ||
+      shows.length > 0 ||
+      isMoviesError ||
+      isShowsError
+    ) {
+      setInitialLoad(false);
+    }
+  }, [movies.length, shows.length, isMoviesError, isShowsError]);
+
   const handleSearchResults = useCallback((newState) => {
     setSearchState(newState);
   }, []);
 
-  const isFetching = isLoadingMovies || isLoadingShows;
   const isError = isMoviesError || isShowsError;
 
   const handleRetry = useCallback(() => {
+    console.log('Retry clicked - Starting refetch');
+    setInitialLoad(true);
     refetchMovies();
     refetchShows();
   }, [refetchMovies, refetchShows]);
 
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
-
-  useEffect(() => {
-    let timer;
-    if (isFetching) {
-      timer = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 10000);
-    }
-    return () => clearTimeout(timer);
-  }, [isFetching]);
-
-  if (isFetching && !loadingTimeout) {
-    return (
-      <PageLayout>
-        <div className="flex items-center justify-center min-h-[50vh]">
-          <Loading />
-        </div>
-      </PageLayout>
-    );
-  }
-
-  if (loadingTimeout || isError) {
+  if (isError && !initialLoad) {
     return (
       <PageLayout
         showSearch
@@ -74,14 +74,10 @@ export default function Home() {
       >
         <div className="text-center py-20">
           <h2 className="text-2xl font-bold text-destructive mb-4">
-            {loadingTimeout
-              ? 'Taking Too Long to Load'
-              : 'Unable to Load Content'}
+            Unable to Load Content
           </h2>
           <p className="text-muted-foreground mb-4">
-            {loadingTimeout
-              ? 'The connection seems to be slow. Please try again.'
-              : 'There was a problem loading the content.'}
+            There was a problem loading the content.
           </p>
           <button
             onClick={handleRetry}
@@ -94,11 +90,28 @@ export default function Home() {
     );
   }
 
+  if (initialLoad) {
+    return (
+      <PageLayout>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loading />
+        </div>
+      </PageLayout>
+    );
+  }
+
+  const heroContent = movies?.length > 0 && (
+    <div className="pt-4">
+      <HeroCarousel items={movies} />
+    </div>
+  );
+
   if (searchState.searchQuery) {
     return (
       <PageLayout
         showSearch
         onSearchResults={handleSearchResults}
+        initialSearchValue={searchState.searchQuery}
         containerClassName="py-20"
       >
         <h2 className="text-2xl font-bold mb-6">Search Results</h2>
@@ -119,12 +132,6 @@ export default function Home() {
     );
   }
 
-  const heroContent = movies?.length > 0 && (
-    <div className="pt-4">
-      <HeroCarousel items={movies} />
-    </div>
-  );
-
   return (
     <PageLayout
       heroContent={heroContent}
@@ -132,21 +139,28 @@ export default function Home() {
       onSearchResults={handleSearchResults}
       containerClassName="py-20"
     >
-      {!movies?.length && !shows?.length ? (
-        <div className="text-center py-20">
-          <h2 className="text-2xl font-bold mb-4">No Content Available</h2>
-          <p className="text-muted-foreground">
-            There are currently no trending movies or shows to display.
-          </p>
-        </div>
-      ) : (
-        <>
-          {movies?.length > 0 && (
-            <TrendingMovies movies={movies.slice(0, 10)} />
-          )}
-          {shows?.length > 0 && <TrendingShows shows={shows.slice(0, 10)} />}
-        </>
-      )}
+      <div className="space-y-8">
+        {!movies?.length && !shows?.length ? (
+          <div className="text-center py-20">
+            <h2 className="text-2xl font-bold mb-4">No Content Available</h2>
+            <p className="text-muted-foreground">
+              There are currently no trending movies or shows to display.
+            </p>
+          </div>
+        ) : (
+          <>
+            {movies?.length > 0 && (
+              <TrendingMovies movies={movies.slice(0, 10)} />
+            )}
+            {movies?.length > 0 && shows?.length > 0 && (
+              <div className="w-full max-w-[95%] mx-auto">
+                <hr className="border-t border-border opacity-60" />
+              </div>
+            )}
+            {shows?.length > 0 && <TrendingShows shows={shows.slice(0, 10)} />}
+          </>
+        )}
+      </div>
     </PageLayout>
   );
 }
