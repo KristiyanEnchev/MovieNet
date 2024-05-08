@@ -14,6 +14,7 @@
            TimeWindow timeWindow,
            bool appendToResponse,
            string userId = null,
+           bool transformUrls = true,
            CancellationToken cancellationToken = default);
 
         Task<Result<PaginatedResult<MovieDto>>> SearchAsync(

@@ -218,6 +218,7 @@
                         TimeWindow.day,
                         false,
                         null,
+                        true,
                         cancellationToken);
 
                     if (!result.Success)

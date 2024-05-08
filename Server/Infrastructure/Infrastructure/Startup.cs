@@ -26,6 +26,7 @@
     using Infrastructure.Services.Token;
     using Infrastructure.Services.Cache;
     using Infrastructure.BackgroundJobs;
+    using Infrastructure.Services.Image;
     using Infrastructure.Services.Identity;
 
     using Application.Interfaces;
@@ -48,10 +49,17 @@
 
         private static IServiceCollection AddServices(this IServiceCollection services)
         {
+
             services
-                .AddTransient<IMediator, Mediator>()
+                .AddTransient<IMediator, Mediator>();
+
+            services
                 .AddTransient<IMovieService, MovieService>()
                 .AddTransient<IUserInteractionService, UserInteractionService>();
+
+            services.AddHttpClient<ImageCacheService>()
+                   .SetHandlerLifetime(TimeSpan.FromMinutes(5));
+            services.AddScoped<IImageCacheService, ImageCacheService>();
 
             return services;
         }
@@ -117,16 +125,27 @@
         {
             services.Configure<CacheOptions>(configuration.GetSection("Cache"));
 
+            var redisConnection = configuration.GetConnectionString("Redis");
+
+            var redisUri = new Uri($"rediss://{redisConnection.Replace("default:", "")}");
+
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = configuration.GetConnectionString("Redis");
-                options.InstanceName = configuration.GetSection("Cache:InstanceName").Value ?? "MovieNet_";
+                options.Configuration = $"{redisUri.Host}:{redisUri.Port},ssl=True,abortConnect=False,password={redisUri.UserInfo}";
+                options.InstanceName = configuration["Cache:InstanceName"] ?? "MovieNet_";
             });
 
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
-                var connectionString = configuration.GetConnectionString("Redis");
-                return ConnectionMultiplexer.Connect(connectionString);
+                var redisOptions = new ConfigurationOptions
+                {
+                    EndPoints = { $"{redisUri.Host}:{redisUri.Port}" },
+                    Ssl = true,
+                    AbortOnConnectFail = false,
+                    Password = redisUri.UserInfo
+                };
+
+                return ConnectionMultiplexer.Connect(redisOptions);
             });
 
             services.AddScoped<ICacheService, RedisCacheService>();

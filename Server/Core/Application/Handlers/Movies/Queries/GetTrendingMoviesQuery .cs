@@ -37,7 +37,7 @@
 
             public async Task<Result<PaginatedResult<MovieDto>>> Handle(GetTrendingMoviesQuery request, CancellationToken cancellationToken)
             {
-                return await _movieService.GetTrendingAsync(request.MediaType, request.TimeWindow,request.AppendToResponse, request.UserId!, cancellationToken);
+                return await _movieService.GetTrendingAsync(request.MediaType, request.TimeWindow,request.AppendToResponse, request.UserId!, true, cancellationToken);
             }
         }
     }

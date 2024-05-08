@@ -1,14 +1,12 @@
 ﻿namespace Web
 {
     using System.Reflection;
-    using System.Security.Authentication;
 
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Routing;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.AspNetCore.Server.Kestrel.Https;
 
     using Application;
     using Application.Interfaces;
@@ -77,13 +75,9 @@
 
         private static IWebHostBuilder AddKestrelConfig(IWebHostBuilder builder)
         {
-            builder.ConfigureKestrel((context, serverOptions) =>
+            builder.ConfigureKestrel(serverOptions =>
             {
-                serverOptions.ConfigureHttpsDefaults(options =>
-                {
-                    options.SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13;
-                    options.ClientCertificateMode = ClientCertificateMode.AllowCertificate;
-                });
+                serverOptions.ListenAnyIP(8080);
             });
 
             return builder;
@@ -108,12 +102,13 @@
         {
             services.AddCors(options =>
             {
-                options.AddPolicy("MovieNet",
-                    builder => builder
-                       .AllowAnyHeader()
-                       .AllowAnyMethod()
-                       .AllowCredentials()
-                       .WithOrigins("http://localhost:3000"));
+                options.AddPolicy("MovieNet", builder =>
+                {
+                    builder.WithOrigins("http://localhost:3000", "https://mango-hill-028774503-production.westeurope.4.azurestaticapps.net")
+                        .WithHeaders("Authorization", "Content-Type")
+                        .WithMethods("GET", "POST", "PUT", "DELETE")
+                        .AllowCredentials();
+                });
             });
 
             return services;

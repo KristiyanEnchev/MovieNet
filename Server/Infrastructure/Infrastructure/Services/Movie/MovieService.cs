@@ -26,6 +26,7 @@ namespace Infrastructure.Services.Movie
         private readonly IMapper _mapper;
         private readonly ILogger<MovieService> _logger;
         private readonly IGenreRepository _genreRepository;
+        private readonly IImageCacheService _imageCacheService;
 
         public MovieService(
             IMovieRepository movieRepository,
@@ -34,7 +35,8 @@ namespace Infrastructure.Services.Movie
             ICacheService cache,
             IMapper mapper,
             ILogger<MovieService> logger,
-            IGenreRepository genreRepository)
+            IGenreRepository genreRepository,
+            IImageCacheService imageCacheService)
         {
             _movieRepository = movieRepository;
             _interactionRepository = interactionRepository;
@@ -43,6 +45,40 @@ namespace Infrastructure.Services.Movie
             _mapper = mapper;
             _logger = logger;
             _genreRepository = genreRepository;
+            _imageCacheService = imageCacheService;
+        }
+
+        private void TransformUrlsInMediaDto(MovieDetailsDto media)
+        {
+            if (media == null) return;
+
+            if (!string.IsNullOrEmpty(media.PosterPath))
+            {
+                media.PosterPath = _imageCacheService.GetLocalImageUrl(media.PosterPath, "poster");
+            }
+
+            if (!string.IsNullOrEmpty(media.BackdropPath))
+            {
+                media.BackdropPath = _imageCacheService.GetLocalImageUrl(media.BackdropPath, "backdrop");
+            }
+        }
+
+        private void TransformUrlsInMovies(IEnumerable<MovieDto> movies)
+        {
+            if (movies == null) return;
+
+            foreach (var movie in movies)
+            {
+                if (!string.IsNullOrEmpty(movie.PosterPath))
+                {
+                    movie.PosterPath = _imageCacheService.GetLocalImageUrl(movie.PosterPath, "poster");
+                }
+
+                if (!string.IsNullOrEmpty(movie.BackdropPath))
+                {
+                    movie.BackdropPath = _imageCacheService.GetLocalImageUrl(movie.BackdropPath, "backdrop");
+                }
+            }
         }
 
         public async Task<Result<MovieDetailsDto>> SyncMovieFromTmdbAsync(
@@ -73,7 +109,10 @@ namespace Infrastructure.Services.Movie
                 await _movieRepository.SaveChangesAsync(cancellationToken);
                 await InvalidateMovieCacheAsync(movie.Id, mediaType);
 
-                return Result<MovieDetailsDto>.SuccessResult(_mapper.Map<MovieDetailsDto>(tmdbResult.Data));
+                var result = _mapper.Map<MovieDetailsDto>(tmdbResult.Data);
+                TransformUrlsInMediaDto(result);
+
+                return Result<MovieDetailsDto>.SuccessResult(result);
             }
             catch (Exception ex)
             {
@@ -135,6 +174,7 @@ namespace Infrastructure.Services.Movie
             TimeWindow timeWindow,
             bool appendToResponse,
             string userId = null,
+            bool transformUrls = true,
             CancellationToken cancellationToken = default)
         {
             var cacheKey = $"trending_{mediaType}:{timeWindow}";
@@ -148,6 +188,11 @@ namespace Infrastructure.Services.Movie
                         return Result<PaginatedResult<MovieDto>>.Failure(tmdbResult.Errors);
 
                     var movies = _mapper.Map<List<MovieDto>>(tmdbResult.Data.Data);
+                    if (transformUrls)
+                    {
+                        TransformUrlsInMovies(movies);
+                    }
+
                     return Result<PaginatedResult<MovieDto>>.SuccessResult(
                         PaginatedResult<MovieDto>.Create(
                             movies,
@@ -157,6 +202,11 @@ namespace Infrastructure.Services.Movie
                 },
                 TimeSpan.FromMinutes(15),
                 cancellationToken);
+
+            if (transformUrls)
+            {
+                TransformUrlsInMovies(result.Data.Data);
+            }
 
             if (result.Success && !string.IsNullOrEmpty(userId))
             {
@@ -176,23 +226,25 @@ namespace Infrastructure.Services.Movie
             var cacheKey = $"search:{mediatype}:{query}:{page}";
 
             var result = await _cache.GetOrSetAsync(
-                cacheKey,
-                async () =>
-                {
-                    var tmdbResult = await _tmdbService.SearchAsync(query, mediatype, page, cancellationToken);
-                    if (!tmdbResult.Success)
-                        return Result<PaginatedResult<MovieDto>>.Failure(tmdbResult.Errors);
+                 cacheKey,
+                 async () =>
+                 {
+                     var tmdbResult = await _tmdbService.SearchAsync(query, mediatype, page, cancellationToken);
+                     if (!tmdbResult.Success)
+                         return Result<PaginatedResult<MovieDto>>.Failure(tmdbResult.Errors);
 
-                    var movies = _mapper.Map<List<MovieDto>>(tmdbResult.Data.Data);
-                    return Result<PaginatedResult<MovieDto>>.SuccessResult(
-                        PaginatedResult<MovieDto>.Create(
-                            movies,
-                            tmdbResult.Data.TotalCount,
-                            tmdbResult.Data.CurrentPage,
-                            tmdbResult.Data.PageSize));
-                },
-                TimeSpan.FromMinutes(30),
-                cancellationToken);
+                     var movies = _mapper.Map<List<MovieDto>>(tmdbResult.Data.Data);
+                     TransformUrlsInMovies(movies);
+
+                     return Result<PaginatedResult<MovieDto>>.SuccessResult(
+                         PaginatedResult<MovieDto>.Create(
+                             movies,
+                             tmdbResult.Data.TotalCount,
+                             tmdbResult.Data.CurrentPage,
+                             tmdbResult.Data.PageSize));
+                 },
+                 TimeSpan.FromMinutes(30),
+                 cancellationToken);
 
             if (result.Success && !string.IsNullOrEmpty(userId))
             {
@@ -220,6 +272,8 @@ namespace Infrastructure.Services.Movie
 
                     await SyncMovieFromTmdbAsync(mediaType, tmdbId, appendToResponse, cancellationToken);
                     var movieDto = _mapper.Map<MovieDetailsDto>(tmdbResult.Data);
+                    TransformUrlsInMediaDto(movieDto);
+
                     return Result<MovieDetailsDto>.SuccessResult(movieDto);
                 },
                 TimeSpan.FromHours(1),
@@ -256,6 +310,8 @@ namespace Infrastructure.Services.Movie
                         return Result<PaginatedResult<MovieDto>>.Failure(tmdbResult.Errors);
 
                     var movies = _mapper.Map<List<MovieDto>>(tmdbResult.Data.Data);
+                    TransformUrlsInMovies(movies);
+
                     return Result<PaginatedResult<MovieDto>>.SuccessResult(
                         PaginatedResult<MovieDto>.Create(
                             movies,

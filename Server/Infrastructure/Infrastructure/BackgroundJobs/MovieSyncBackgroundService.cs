@@ -62,6 +62,7 @@
                             timeWindow,
                             false,
                             userId: null,
+                            transformUrls: false,
                             cancellationToken);
 
                         if (!result.Success)
