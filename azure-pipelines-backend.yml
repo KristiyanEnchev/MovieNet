@@ -1,0 +1,43 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Server/*
+      - Server/**/*
+    exclude:
+      - Client/*
+      - Client/**/*
+
+resources:
+  repositories:
+  - repository: github-repo
+    type: github
+    name: KristiyanEnchev/MovieNet
+    endpoint: GitHub-Connection
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+- checkout: github-repo
+
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '6.x'
+
+- script: dotnet restore Server/MovieNet.sln
+  displayName: 'Restore NuGet Packages'
+
+- script: dotnet build Server/MovieNet.sln --configuration Release
+  displayName: 'Build Project'
+
+- script: dotnet publish Server/MovieNet.sln -c Release -o $(Build.ArtifactStagingDirectory)
+  displayName: 'Publish Project'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    artifactName: 'drop'
