@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { toast } from 'react-hot-toast';
 
-const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5069/api';
+const BASE_URL = process.env.REACT_APP_API_BASE_URL || 'https://movienet-hrhuaebghehgf3f4.germanywestcentral-01.azurewebsites.net/api';
 
 export const baseQuery = fetchBaseQuery({
   baseUrl: BASE_URL,
