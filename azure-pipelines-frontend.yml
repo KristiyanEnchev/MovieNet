@@ -1,0 +1,41 @@
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - Client/*
+      - Client/**/*
+    exclude:
+      - Server/*
+      - Server/**/*
+
+resources:
+  repositories:
+  - repository: github-repo
+    type: github
+    name: KristiyanEnchev/MovieNet
+    endpoint: GitHub-Connection
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+- checkout: github-repo
+
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+
+- script: npm install
+  displayName: 'Install Dependencies'
+  workingDirectory: Client
+
+- script: npm run build
+  displayName: 'Build Project'  
+  workingDirectory: Client
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: 'Client/build'
+    artifactName: 'drop'
