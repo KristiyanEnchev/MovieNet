@@ -6,17 +6,9 @@
 
 ---
 
-<p align="center">
-    <table>
-        <tr>
-            <td>
-                <img src="Client/public/Movie.PNG" alt="banner" style="width: 45%;">
-            </td>
-            <td>
-                <img src="Client/public/Movie2.PNG" alt="banner" style="width: 45%;">
-            </td>
-        </tr>
-    </table>
+<p align="center" style="display: flex; justify-content: space-between; align-items: center;">
+    <img src="Client/public/Movie.PNG" alt="Movie 1" style="width: 49%; margin: 0;">
+    <img src="Client/public/Movie2.PNG" alt="Movie 2" style="width: 49%; margin: 0;">
 </p>
 
 ---
