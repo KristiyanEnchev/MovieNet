@@ -12,9 +12,15 @@ To run the project locally:
 
 ```bash
 git clone https://github.com/KristiyanEnchev/MovieNet.git
+```
 Set your TMDB API key at https://www.themoviedb.org and add it in the .env file.
+```bash
 cd MovieNet/
+```
+```bash
 cp .env.example .env
+```
+```bash
 docker-compose up --build -d
 ```
 
