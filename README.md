@@ -1,12 +1,12 @@
-# MovieNet ?? 
+# MovieNet 🎥 
 
-## ??? Overviw
+## 🏗️ Overviw
 
-**MovieNet** is a movie discovery and management app, built with **.NET 6** and **React 18 (Vite)**, leveraging **Clean Architecture**, **DDD**, **TMDB API**, **Redis**, **PostgreSQL**, and modern frontend technologies like TailwindCSS, shadcn/ui, and **RTK Query** for a dynamic and scalable user experience. It�s containerized with **Docker** and serves the UI through **Nginx**.
+**MovieNet** is a movie discovery and management app, built with **.NET 6** and **React 18 (Vite)**, leveraging **Clean Architecture**, **DDD**, **TMDB API**, **Redis**, **PostgreSQL**, and modern frontend technologies like TailwindCSS, shadcn/ui, and **RTK Query** for a dynamic and scalable user experience. It’s containerized with **Docker** and serves the UI through **Nginx**.
 
 ---
 
-## ?? Try it out
+## 👀 Try it out
 
 To run the project locally:
 
@@ -19,7 +19,7 @@ docker-compose up --build -d
 
 ---
 
-## ?? Configuration
+## 🔠 Configuration
 
 - **Default Account**: Email: admin@admin.com, Password: 123456
 - **TMDB API Key**: Set your TMDB API key at `https://www.themoviedb.org` and add it in the `.env` file.
@@ -30,7 +30,7 @@ docker-compose up --build -d
 
 ---
 
-## ?? Built with
+## 🔧 Built with
 
 ### Backend:
 - [.NET 6](https://dotnet.microsoft.com/)
@@ -62,7 +62,7 @@ docker-compose up --build -d
 
 ---
 
-## ?? Features
+## 📚 Features
 - **Movie Search**: Search and discover movies.
 - **Movie Sort**: Sort your movies per genre.
 - **Trailer Preview**: Watch your favorite movies trailer.
@@ -74,19 +74,19 @@ docker-compose up --build -d
 
 ---
 
-## ?? License
+## ✏️ License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## ????? Show your support
+## 👨‍💻 Show your support
 
-Give a ? if you like this project and find it helpful!
+Give a ⭐ if you like this project and find it helpful!
 
 ---
 
-## ?????? Author 
+## 🧏‍♂️️ Author 
 
 [![Facebook](https://img.shields.io/badge/kristiyan.enchev-%231877F2.svg?style=for-the-badge&logo=Facebook&logoColor=white)](https://www.facebook.com/kristiqn.enchev.5/) [![Instagram](https://img.shields.io/badge/kristiyan-%23E4405F.svg?style=for-the-badge&logo=Instagram&logoColor=white)](https://www.instagram.com/kristiyan_e/)[
 ![Gmail](https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:kristiqnenchevv@gmail.com)
