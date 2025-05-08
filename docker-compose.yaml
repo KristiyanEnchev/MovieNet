@@ -81,12 +81,12 @@ services:
       dockerfile: ./API/Host/Dockerfile
     container_name: dotnet-api
     ports:
-      - '5069:80'
+      - '8080:8080'
     depends_on:
       postgres:
         condition: service_healthy
     environment:
-      - DOTNET_ENVIRONMENT=PROD
+      - ASPNETCORE_ENVIRONMENT=PROD
       - ConnectionStrings__DefaultConnection=${DB_CONNECTION_STRING}
       - ConnectionStrings__Redis=${REDIS_CONNECTION}
       - Tmdb__ApiKey=${TMDB_API_KEY}

@@ -127,25 +127,21 @@
 
             var redisConnection = configuration.GetConnectionString("Redis");
 
-            var redisUri = new Uri($"rediss://{redisConnection.Replace("default:", "")}");
+            if (redisConnection.Contains("default:") || redisConnection.StartsWith("redis://") || redisConnection.StartsWith("rediss://"))
+            {
+                var redisUri = new Uri($"rediss://{redisConnection.Replace("default:", "")}");
+                redisConnection = $"{redisUri.Host}:{redisUri.Port},ssl=True,abortConnect=False,password={redisUri.UserInfo}";
+            }
 
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = $"{redisUri.Host}:{redisUri.Port},ssl=True,abortConnect=False,password={redisUri.UserInfo}";
+                options.Configuration = redisConnection;
                 options.InstanceName = configuration["Cache:InstanceName"] ?? "MovieNet_";
             });
 
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
-                var redisOptions = new ConfigurationOptions
-                {
-                    EndPoints = { $"{redisUri.Host}:{redisUri.Port}" },
-                    Ssl = true,
-                    AbortOnConnectFail = false,
-                    Password = redisUri.UserInfo
-                };
-
-                return ConnectionMultiplexer.Connect(redisOptions);
+                return ConnectionMultiplexer.Connect(redisConnection);
             });
 
             services.AddScoped<ICacheService, RedisCacheService>();
